@@ -105,13 +105,10 @@ If `yes`: the generated command body MUST end with the AI-first rule footer (see
 Ask via the AskUserQuestion tool (multi-select):
 
 > "Does this command call any external APIs?"
-> - Perplexity Sonar (web research)
-> - xAI Grok (X posts, x_search tool)
-> - YouTube Data API
 > - Other (free text)
 > - None - purely operates on the vault and conversation
 
-If any are selected, the generated body should include a setup line referencing `~/.config/obsidian-second-brain/.env` and the relevant key (e.g., `PERPLEXITY_API_KEY`).
+If an API is named, the generated body should include a setup line referencing `~/.config/obsidian-second-brain/.env` and the relevant key.
 
 ---
 

@@ -46,9 +46,9 @@ from export_okf import parse_note  # noqa: E402 - reuse the one dict-frontmatter
 from note_io import NoteChangedError, read_exact, write_exact_if_unchanged  # noqa: E402
 from vault_health import check_duplicates, load_vault, load_vault_config  # noqa: E402
 
-# Bare tokens (idea, active, 2026-08-26, research-notebooklm) are left unquoted,
+# Bare tokens (idea, active, 2026-08-26) are left unquoted,
 # matching the actual generated notes in this repo (bootstrap_vault.py's
-# templates, notebooklm.py's NOTEBOOKLM_NOTE_TEMPLATE both leave type/status/
+# templates leave type/status/
 # date bare) rather than CLAUDE.md's "quote when in doubt" prose, which the
 # real templates don't follow either. Wikilinks ("[[X]]") MUST be quoted: a
 # leading "[" is YAML flow-sequence syntax, so an unquoted wikilink is not a

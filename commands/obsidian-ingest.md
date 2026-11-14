@@ -55,28 +55,12 @@ Run only one folder ingestion per vault at a time. This minimal helper has no ac
 2. Classify the source type before reading the full content:
    - **Article/blog post** - extract key claims, people, tools, concepts
    - **PDF/text document** (.pdf, .docx, .doc, .odt) - extract structure, findings, recommendations; convert Office/OpenDocument text files to PDF first (step 3)
-   - **Transcript (meeting/podcast)** - extract speakers, decisions, action items, quotes
-   - **YouTube video** - pull metadata, description, and transcript (see step 3 for method)
+   - **Transcript (meeting)** - extract speakers, decisions, action items, quotes
    - **Audio file** (.m4a, .mp3, .wav, .ogg, .webm) - transcribe, identify speakers, extract decisions/tasks/promises
    - **Image/screenshot** (.png, .jpg, .jpeg, .webp) - read/OCR the image, extract text and context
    - **Raw text** - classify by content (opinion, technical, narrative) and extract accordingly
 
 3. Read or fetch the full source content:
-
-   **For YouTube URLs** - try methods in this order (use the first one that works):
-
-   **Method A - `yt-dlp` (best, works in Claude Code / terminal):**
-   ```bash
-   which yt-dlp || brew install yt-dlp
-   yt-dlp --skip-download --print title --print description --print duration_string --print view_count --print like_count --print upload_date --print channel "URL"
-   yt-dlp --write-auto-sub --sub-lang en --skip-download -o "/tmp/%(id)s" "URL"
-   ```
-
-   **Method B - YouTube MCP tools (works in Claude Desktop if configured):**
-   Check if YouTube MCP tools are available. If so, use them.
-
-   **Method C - oEmbed fallback (works everywhere, limited data):**
-   Fetch `https://www.youtube.com/oembed?url=URL&format=json` - gives title and channel only. Ask user to paste description for full ingest.
 
    **For audio files** (.m4a, .mp3, .wav, .ogg, .webm):
    ```bash

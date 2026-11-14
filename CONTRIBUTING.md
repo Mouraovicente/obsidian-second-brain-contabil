@@ -38,11 +38,10 @@ cd ~/Projects/obsidian-second-brain
 # Install Python deps via uv (auto-creates .venv)
 uv sync
 
-# Set up API keys for the research toolkit (optional — only needed if you're working on /x-read, /x-pulse, /research, /research-deep, or /youtube)
+# Local settings (optional): vault path and the other knobs in .env.example
 mkdir -p ~/.config/obsidian-second-brain
 cp .env.example ~/.config/obsidian-second-brain/.env
 chmod 600 ~/.config/obsidian-second-brain/.env
-# then paste your xAI / Perplexity / YouTube keys into the file
 
 # Link the skill into Claude Code (if you're testing slash commands)
 ln -s "$(pwd)" ~/.claude/skills/obsidian-second-brain
@@ -64,12 +63,12 @@ Now restart Claude Code and your slash commands will use the local checkout.
 
 ### ✨ New slash commands
 
-This is the most common contribution. The skill currently has 48 commands across 4 layers; adding a 49th is a clear path.
+This is the most common contribution. The skill currently has 38 commands; adding a 39th is a clear path.
 
 **Required steps:**
 1. **Open a feature request issue first.** Get a thumbs-up before building. Saves you wasted work if the command isn't a fit.
 2. Add `commands/<command-name>.md` with frontmatter and instructions
-3. If the command runs Python (research-style), add `scripts/research/<script>.py`
+3. If the command runs Python add `scripts/<script>.py`
 4. **Apply the [AI-first rule](references/ai-first-rules.md) to any vault writes.** This is non-negotiable. Every saved note must:
    - Have a `## For future agent` preamble
    - Have rich frontmatter (`type`, `date`, `tags`, `ai-first: true`, plus type-specific fields)
@@ -81,13 +80,6 @@ This is the most common contribution. The skill currently has 48 commands across
 6. Update `README.md` - add the command to the relevant table in the "Commands" section
 7. Update `references/ai-first-rules.md` - if your command produces a NEW note type, add its frontmatter schema there
 8. Add an entry to `CHANGELOG.md` under "Unreleased"
-
-### 🔌 New integrations / sources
-
-Adding a new research source (Reddit, podcasts, papers, etc.) follows the same path as a new command, plus:
-- Document API setup in `.env.example` and the README's "Research toolkit" install section
-- Add the API key to `scripts/research/lib/config.py` with `get_optional()` (degrades gracefully if missing)
-- Use the `lib/grok.py` and `lib/perplexity.py` patterns for retry + error handling
 
 ### 📚 Documentation
 
@@ -134,9 +126,9 @@ triggers_en: ["save this", "save the conversation", "save to vault"]
 triggers_es: ["guarda esto", "guarda la conversación", "guarda al vault"]
 ```
 
-When you rebuild (`bash scripts/build.sh`), the new language automatically appears as its own section under `## Trigger phrases` in the dispatcher files (`AGENTS.md`, `GEMINI.md`). No adapter code changes needed.
+When you rebuild (`bash scripts/build.sh`), the new language automatically appears as its own section under `## Trigger phrases` in the dispatcher files (`AGENTS.md`). No adapter code changes needed.
 
-Translation PRs welcome for any of the 48 commands. Send one language at a time, full coverage. Open `commands/*.md`, add your `triggers_<code>:` line under the existing `triggers_en:`, and open a PR titled `Add <Language> trigger phrases`.
+Translation PRs welcome for any of the 38 commands. Send one language at a time, full coverage. Open `commands/*.md`, add your `triggers_<code>:` line under the existing `triggers_en:`, and open a PR titled `Add <Language> trigger phrases`.
 
 ### 🐧 Cross-platform support
 
@@ -162,14 +154,14 @@ The skill currently assumes macOS (`install.sh`, `~/.config` paths, the `open` c
 - **One blank line between sections**
 
 ### Commits
-- **Subject line:** imperative mood, focus on WHY ("Add /x-pulse command for X trend scanning"), not WHAT ("Added file")
+- **Subject line:** imperative mood, focus on WHY ("Add /obsidian-shipped for weekly retrospectives"), not WHAT ("Added file")
 - **Body:** explain motivation if non-obvious. Wrap at 72 chars.
 - **Co-author tag** if Claude pair-programmed: `Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>`
 
 ### PR titles
 Same as commits - imperative + WHY-focused. Examples that ship fast:
 - ✅ `Add /obsidian-shipped for weekly retrospectives`
-- ✅ `Fix /research-deep retry logic when Grok times out`
+- ✅ `Fix /obsidian-health retry logic when a scan times out`
 - ❌ `Updates`
 - ❌ `WIP fix`
 
@@ -182,10 +174,10 @@ Right now the project has no formal test suite (planned post-v1.0). Until then:
 **For Python changes:**
 ```bash
 # Verify imports
-uv run python -c "from scripts.research import x_read, x_pulse, research, research_deep, youtube_extract; print('OK')"
+uv run python -c "from scripts.research.lib import config, vault, vault_terms; print('OK')"
 
-# Smoke test a command (requires API keys)
-uv run -m scripts.research.x_read "https://x.com/some/post"
+# Smoke test a script
+uv run scripts/vault_health.py --path /path/to/vault --json
 ```
 
 **For slash command changes:**

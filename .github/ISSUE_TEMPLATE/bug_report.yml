@@ -42,13 +42,7 @@ body:
         - "/obsidian-connect"
         - "/obsidian-graduate"
         - "/obsidian-world"
-        - "/x-read"
-        - "/x-pulse"
-        - "/research"
-        - "/research-deep"
-        - "/youtube"
         - Background agent (PostCompact hook)
-        - Scheduled agent (morning / nightly / weekly / health)
         - install.sh
         - Other / not sure
     validations:
@@ -60,8 +54,8 @@ body:
       label: What happened?
       description: What did you run, and what went wrong?
       placeholder: |
-        I ran `/research-deep "AI memory tools"`. The script said Phase 4 failed with:
-        "Perplexity API error 400: model not found"
+        I ran `/obsidian-health`. The script said it failed with:
+        "FileNotFoundError: ..."
     validations:
       required: true
 
@@ -69,7 +63,7 @@ body:
     id: expected
     attributes:
       label: What did you expect to happen?
-      placeholder: A research note saved to Research/Deep/ and Obsidian opening at the new note.
+      placeholder: A health report listing issues by severity.
     validations:
       required: true
 
@@ -81,7 +75,7 @@ body:
       placeholder: |
         1. Pull latest main (commit hash)
         2. Run `uv sync`
-        3. Run `/research-deep "topic name"`
+        3. Run `/obsidian-health`
         4. See error
     validations:
       required: true
@@ -110,7 +104,7 @@ body:
     id: logs
     attributes:
       label: Relevant logs / error output
-      description: Paste error messages, stack traces, or `~/.research-toolkit/usage.log` entries if relevant.
+      description: Paste error messages, stack traces if relevant.
       render: shell
 
   - type: textarea

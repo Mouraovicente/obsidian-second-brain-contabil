@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
-"""Loads research-toolkit credentials and model defaults from ~/.config/obsidian-second-brain/.env"""
+"""Loads OBSIDIAN_VAULT_PATH and other settings from ~/.config/obsidian-second-brain/.env"""
 
 import os
 import sys
@@ -52,23 +52,4 @@ def get_optional_int(name: str, default: int) -> int:
         ) from None
 
 
-XAI_API_KEY = lambda: get_required("XAI_API_KEY")
-PERPLEXITY_API_KEY = lambda: get_required("PERPLEXITY_API_KEY")
-GEMINI_API_KEY = lambda: get_required("GEMINI_API_KEY")
-OPENAI_API_KEY = lambda: get_required("OPENAI_API_KEY")
-YOUTUBE_API_KEY = lambda: get_optional("YOUTUBE_API_KEY", "")
-FIRECRAWL_API_KEY = lambda: get_optional("FIRECRAWL_API_KEY", "")
-
-# grok-4 no longer appears in GET /v1/models (it still resolves server-side, but is
-# unlisted). grok-4.5 is current and verified against the x_search tool.
-GROK_MODEL = get_optional("GROK_MODEL", "grok-4.5")
-PERPLEXITY_RESEARCH_MODEL = get_optional("PERPLEXITY_RESEARCH_MODEL", "sonar-pro")
-PERPLEXITY_DEEP_MODEL = get_optional("PERPLEXITY_DEEP_MODEL", "sonar-deep-research")
-NOTEBOOKLM_MODEL = get_optional("NOTEBOOKLM_MODEL", "gemini-2.5-flash")
-# behavior_eval.py's judge - deliberately a different provider from GROK_MODEL,
-# which generates the answers being judged, so grading a model's own answers
-# never happens by default.
-GPT_JUDGE_MODEL = get_optional("GPT_JUDGE_MODEL", "gpt-4o-mini")
-
 VAULT_PATH = Path(get_required("OBSIDIAN_VAULT_PATH")).expanduser()
-USAGE_LOG = Path.home() / ".research-toolkit" / "usage.log"

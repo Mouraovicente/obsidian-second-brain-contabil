@@ -1472,13 +1472,6 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
     print("   SessionStart hook from install.sh or the Claude Code plugin, plus")
     print("   OBSIDIAN_VAULT_PATH from scripts/setup.sh, for sessions started")
     print("   inside the vault).")
-    # The one moment the reader has definitely just got value: their vault
-    # exists and they can see what was created. Once per machine, never in CI.
-    try:
-        from star_prompt import maybe_ask
-        maybe_ask(f"Your vault is set up at {vault}.")
-    except Exception:
-        pass  # never let this break a bootstrap that otherwise succeeded
 
 
 def main():

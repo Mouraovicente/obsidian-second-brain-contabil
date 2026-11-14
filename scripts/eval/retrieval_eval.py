@@ -13,11 +13,10 @@ the skill ships with, not a reimplementation.
 Two modes:
 
   generate  Bootstrap an eval set FROM the vault. Samples notes, and for each
-            asks an LLM to write a natural-language question a user would ask
-            whose answer lives in that note - deliberately AVOIDING the note's
-            title words, so the question tests semantic retrieval, not string
-            match. The note's path is the gold answer. Writes cases as JSONL.
-            Falls back to a key-free heuristic generator if no XAI_API_KEY.
+            builds a question from a sentence of that note that does not echo
+            the note's title words, so the question tests retrieval, not string
+            match. Local heuristic only, no network. The note's path is the
+            gold answer. Writes cases as JSONL.
 
   eval      (default) Load the cases, run each question through the real
             search, and report recall@1/3/5/10 and MRR, plus the failures -
@@ -30,8 +29,7 @@ Usage:
     uv run python scripts/eval/retrieval_eval.py
     uv run python scripts/eval/retrieval_eval.py --cases scripts/eval/retrieval_cases.jsonl --json
 
-Env (from ~/.config/obsidian-second-brain/.env): OBSIDIAN_VAULT_PATH required;
-XAI_API_KEY optional (enables the LLM question generator).
+Env (from ~/.config/obsidian-second-brain/.env): OBSIDIAN_VAULT_PATH required.
 """
 
 from __future__ import annotations
@@ -50,7 +48,7 @@ MCP_DIR = REPO_ROOT / "integrations" / "obsidian-mcp-server"
 sys.path.insert(0, str(MCP_DIR))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-# Load env (OBSIDIAN_VAULT_PATH + optional keys) the same way the research toolkit does.
+# Load env (OBSIDIAN_VAULT_PATH) through the shared config loader.
 try:
     from research.lib.config import VAULT_PATH  # noqa: F401  (import triggers dotenv load)
 # config.py raises SystemExit (a BaseException) when OBSIDIAN_VAULT_PATH is
@@ -111,48 +109,8 @@ def _title_tokens(stem: str) -> set[str]:
 # --------------------------------------------------------------------------- #
 # Generate mode
 # --------------------------------------------------------------------------- #
-def _llm_question(body: str, title: str, style: str = "semantic") -> str | None:
-    """Ask Grok for a natural-language question this note answers.
-
-    style="semantic": forbid the note's title words (tests meaning-based retrieval -
-        the hard case lexical search cannot do).
-    style="keyword": allow the topic words a real user would recall (tests whether
-        the right note ranks above noisy long notes - where re-ranking helps).
-    """
-    try:
-        from research.lib import grok
-    except Exception:
-        return None
-    import os
-
-    if not os.environ.get("XAI_API_KEY", "").strip():
-        return None
-    excerpt = body[:2500]
-    if style == "keyword":
-        rule = (
-            "Write it the way a person who half-remembers this note would actually "
-            "search - you MAY use the note's topic words. "
-        )
-    else:
-        rule = "Hard rule: do NOT reuse the note's title words verbatim. "
-    prompt = (
-        "Below is one note from a personal knowledge vault. Write ONE natural-language "
-        "question a person would realistically ask whose answer is in this note. "
-        f"{rule}Do NOT mention that this is a note, keep it under 20 words, "
-        "output ONLY the question.\n\n"
-        f"Note title: {title}\n\nNote body:\n{excerpt}"
-    )
-    try:
-        res = grok.call(prompt, command="retrieval-eval", max_output_tokens=120)
-        q = (res.get("text") or "").strip().splitlines()[0].strip().strip('"')
-        return q or None
-    except Exception as e:
-        print(f"[generate] LLM call failed ({e}); using heuristic for this note", file=sys.stderr)
-        return None
-
-
 def _heuristic_question(body: str, title: str) -> str | None:
-    """Key-free fallback: the longest body sentence that avoids the title words."""
+    """Local heuristic: the longest body sentence that avoids the title words."""
     title_toks = _title_tokens(title)
     # strip frontmatter + preamble headers
     text = re.sub(r"^---.*?---", "", body, count=1, flags=re.DOTALL)
@@ -184,7 +142,7 @@ def generate(n: int, cases_path: Path, style: str = "semantic") -> int:
     for md in sampled:
         rel = md.relative_to(vault).as_posix()
         body = md.read_text(encoding="utf-8", errors="ignore")
-        q = _llm_question(body, md.stem, style) or _heuristic_question(body, md.stem)
+        q = _heuristic_question(body, md.stem)
         if not q:
             continue
         cases.append({"q": q, "gold": [rel], "title": md.stem})

@@ -1,4 +1,4 @@
-"""config.get_optional_int: the TX_LIMIT knobs from #234 must fail with the
+"""config.get_optional_int: the integer knobs from #234 must fail with the
 variable named, not an int() traceback, when someone writes `480k`."""
 
 from __future__ import annotations
@@ -13,19 +13,19 @@ from scripts.research.lib import config  # noqa: E402
 
 
 def test_default_when_unset(monkeypatch):
-    monkeypatch.delenv("YOUTUBE_TX_LIMIT", raising=False)
-    assert config.get_optional_int("YOUTUBE_TX_LIMIT", 480000) == 480000
+    monkeypatch.delenv("FIRST_LIMIT", raising=False)
+    assert config.get_optional_int("FIRST_LIMIT", 480000) == 480000
 
 
 def test_integer_value_is_read(monkeypatch):
-    monkeypatch.setenv("PODCAST_TX_LIMIT", " 24000 ")
-    assert config.get_optional_int("PODCAST_TX_LIMIT", 480000) == 24000
+    monkeypatch.setenv("SECOND_LIMIT", " 24000 ")
+    assert config.get_optional_int("SECOND_LIMIT", 480000) == 24000
 
 
 @pytest.mark.parametrize("bad", ["480k", "1e6", "24,000", "lots"])
 def test_non_integer_exits_naming_the_variable(monkeypatch, bad):
-    monkeypatch.setenv("PODCAST_TX_LIMIT", bad)
+    monkeypatch.setenv("SECOND_LIMIT", bad)
     with pytest.raises(SystemExit) as exc:
-        config.get_optional_int("PODCAST_TX_LIMIT", 480000)
-    assert "PODCAST_TX_LIMIT" in str(exc.value)
+        config.get_optional_int("SECOND_LIMIT", 480000)
+    assert "SECOND_LIMIT" in str(exc.value)
     assert bad in str(exc.value)

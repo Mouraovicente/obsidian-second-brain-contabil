@@ -16,9 +16,9 @@ Your Vault/
 │
 ├── raw/                        ← IMMUTABLE. Claude reads, never writes.
 │   ├── articles/               ← Clipped articles, web pages
-│   ├── transcripts/            ← Meeting notes, podcast transcripts
+│   ├── transcripts/            ← Meeting notes and other transcripts
 │   ├── pdfs/                   ← Documents, reports
-│   └── videos/                 ← YouTube metadata + transcripts
+│   └── videos/                 ← video metadata + transcripts
 │
 ├── wiki/                       ← Claude's workspace. Claude maintains everything here.
 │   ├── entities/               ← People, companies, tools (flat, one file per entity)

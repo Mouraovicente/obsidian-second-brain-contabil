@@ -104,7 +104,7 @@ def built() -> Path:
 def test_every_adapter_is_discovered():
     """Guards the parametrization itself: if this drops to a handful, the rest of
     the file silently stops covering the platforms it claims to."""
-    assert len(PLATFORMS) >= 7, f"expected 7+ adapters, found {PLATFORMS}"
+    assert len(PLATFORMS) >= 4, f"expected 4+ adapters, found {PLATFORMS}"
 
 
 @pytest.mark.parametrize("platform", ["agent-skills", "codex-cli"])
@@ -277,7 +277,7 @@ def test_skill_title_is_not_the_shared_rules_heading(built: Path, platform: str)
     """A picker that titles a skill from its first body H1 must not show the
     embedded write spec's heading.
 
-    agent-skills and grok-bot append references/ai-first-rules.md, which opens
+    agent-skills appends references/ai-first-rules.md, which opens
     with "# AI-First Note Rules". That heading has to stay, word for word, and
     it has to come after the skill's own title. Other builds do not embed the
     spec; they pass as long as they do not lead with that heading either.
@@ -311,5 +311,5 @@ def test_skill_title_is_not_the_shared_rules_heading(built: Path, platform: str)
             assert text.count("\n# Crew\n") == 1, f"{platform}/{rel} duplicates its title"
         shared.append(rel)
 
-    if platform in {"agent-skills", "grok-bot"}:
+    if platform == "agent-skills":
         assert shared, f"{platform} no longer embeds the AI-first spec in any skill"

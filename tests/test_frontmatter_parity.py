@@ -116,7 +116,7 @@ def test_the_canonical_parser_handles_the_awkward_cases():
 
 def _build(cwd=None):
     return subprocess.run(
-        [BASH, str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "hermes"],
+        [BASH, str(REPO_ROOT / "scripts" / "build.sh"), "--platform", "claude-code"],
         cwd=cwd or REPO_ROOT, capture_output=True, text=True, check=False,
     )
 
@@ -170,7 +170,7 @@ def test_the_split_logic_this_protects_still_works():
 # --- B35 -------------------------------------------------------------------
 
 def test_unattended_hooks_do_not_log_to_a_fixed_shared_tmp_path():
-    for name in ("obsidian-bg-agent.sh", "obsidian-hermes-session-end.sh"):
+    for name in ("obsidian-bg-agent.sh",):
         src = (REPO_ROOT / "hooks" / name).read_text(encoding="utf-8")
         assert not re.search(r">>\s*/tmp/obsidian-[a-z-]+\.log", src), (
             f"{name} appends to a fixed name in the shared /tmp. It is world-readable "

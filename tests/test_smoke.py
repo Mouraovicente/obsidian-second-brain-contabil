@@ -1,11 +1,11 @@
 """Smoke tests for the two highest-risk subsystems: the adapter build pipeline
 and the vault health checker. Both run the real scripts via subprocess. CI
 installs only the small dependency list in .github/workflows/ci.yml (pytest,
-requests, pyyaml, python-dotenv) - keep that list in sync with what these
+pyyaml, python-dotenv) - keep that list in sync with what these
 tests exercise.
 
 Adapted from the test added by the bmassenz fork (the only fork that shipped
-any automated test). See FORK_INSIGHTS.md items #47/#48.
+any automated test).
 """
 
 from __future__ import annotations
@@ -57,135 +57,6 @@ def test_codex_cli_build_generates_expected_files():
     assert "description:" in head
     assert "Triggers: save this" in head
     assert "Use the obsidian-second-brain skill. Execute `/obsidian-save`:" in content
-    # Calendar depends on a Claude-only MCP and is explicitly excluded from Codex.
-    assert not (REPO_ROOT / "dist/codex-cli/.agents/skills/obsidian-calendar").exists()
-
-
-def test_hermes_build_generates_native_skills():
-    """The hermes adapter must emit one native Hermes skill per command at
-    skills/<category>/<name>/SKILL.md, with the required frontmatter Hermes
-    needs to load it (name, description, version, author, license)."""
-    result = subprocess.run(
-        [BASH, "scripts/build.sh", "--platform", "hermes"],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-
-    assert result.returncode == 0, result.stderr
-    skill = REPO_ROOT / "dist/hermes/skills/vault/obsidian-save/SKILL.md"
-    assert skill.is_file()
-    head = skill.read_text(encoding="utf-8")[:500]
-    for field in ("name: obsidian-save", "description:", "version:", "author:", "license:"):
-        assert field in head, field
-    # Calendar/scheduled commands are Claude-only and must not leak to Hermes.
-    assert not (REPO_ROOT / "dist/hermes/skills/vault/obsidian-calendar").exists()
-
-    # Scheduled agents emit as opt-in blueprint skills under optional-skills/
-    # (not auto-armed skills/), each carrying a cron schedule.
-    nightly = REPO_ROOT / "dist/hermes/optional-skills/obsidian-nightly/SKILL.md"
-    assert nightly.is_file()
-    blueprint = nightly.read_text(encoding="utf-8")
-    assert "blueprint:" in blueprint
-    assert 'schedule: "0 22 * * *"' in blueprint
-    # The opt-in arming surface, not the auto-loaded one.
-    assert not (REPO_ROOT / "dist/hermes/skills/scheduled").exists()
-
-    # #190: the blueprints are hand-written here rather than derived from
-    # commands/, so they drifted out of the folder-map sweep. A hardcoded wiki/
-    # path is three tool failures a night on an Obsidian-style vault, with no
-    # interactive user around to notice.
-    # Naming `wiki/entities/` is fine and expected - as the wiki-style *default*,
-    # beside its Obsidian-style alias. What breaks an Obsidian vault is scanning it
-    # unconditionally, so the negative check is the bare imperative, not the path.
-    assert "references/folder-map.md" in blueprint
-    for alias in ("People/", "Knowledge/"):
-        assert alias in blueprint, alias
-    for unconditional in ("Scan `wiki/entities/`", "create `wiki/concepts/Synthesis"):
-        assert unconditional not in blueprint, unconditional
-
-    # #191: cron jobs are armed with --workdir <vault> and this adapter's own
-    # INSTALL.md points Hermes at the vault, so the working directory is never
-    # the skill root. Every Python invocation has to name the root itself.
-    health = REPO_ROOT / "dist/hermes/optional-skills/obsidian-health-check/SKILL.md"
-    health_text = health.read_text(encoding="utf-8")
-    # Anchored on "Run:" so the blueprint stays free to *name* the broken form
-    # when explaining why the flag is there.
-    assert "Run: `uv run --directory" in health_text
-    assert "Run: `uv run -m scripts." not in health_text
-    # A quoted tilde does not expand, so `--directory "~/..."` would hand uv a
-    # literal `~` directory. $HOME survives the double quotes commands write.
-    for md in (REPO_ROOT / "dist/hermes").rglob("*.md"):
-        text = md.read_text(encoding="utf-8", errors="ignore")
-        assert '--directory "."' not in text, md
-        assert '--directory "~' not in text, md
-    hooks_doc = REPO_ROOT / "dist/hermes/HOOKS.md"
-    assert hooks_doc.is_file()
-    # The on_session_finalize lifecycle hook (PostCompact analog) and its config ship.
-    assert (REPO_ROOT / "dist/hermes/hooks/obsidian-hermes-session-end.sh").is_file()
-    assert (REPO_ROOT / "dist/hermes/hooks/hermes-hooks.config.example.yaml").is_file()
-    hooks_text = hooks_doc.read_text(encoding="utf-8")
-    assert "on_session_finalize" in hooks_text
-    # The docs say when the event fires per surface (#374): a one-shot run only
-    # after the gateway closes its idle session, possibly after the orphan grace.
-    # The install has to reach a hook that runs inside the gateway: it never sees
-    # the caller's shell exports and skips a hook nobody consented to, both
-    # without an error.
-    assert "sessions.orphan_end_grace_s" in hooks_text
-    assert "#374" in hooks_text
-    assert "~/.hermes/.env" in hooks_text
-    assert "--accept-hooks" in hooks_text
-    assert "then: export OBSIDIAN_VAULT_PATH" not in hooks_text
-    # Blueprints never arm on install (#134): the docs must teach explicit arming.
-    assert "hermes cron create" in hooks_text
-    assert "arms as soon as" not in hooks_text
-    install_text = (REPO_ROOT / "dist/hermes/INSTALL.md").read_text(encoding="utf-8")
-    assert "~/.hermes/optional-skills" not in install_text
-    assert "hermes cron create" in install_text
-
-
-def test_pi_build_generates_package():
-    """The pi adapter must emit a valid Pi package: package.json with pi
-    prompts/skills entries, prompt templates with frontmatter, and a discovery
-    skill with valid Agent Skills frontmatter."""
-    result = subprocess.run(
-        [BASH, "scripts/build.sh", "--platform", "pi"],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-
-    assert result.returncode == 0, result.stderr
-
-    package_json = REPO_ROOT / "dist/pi/package.json"
-    assert package_json.is_file()
-    manifest = json.loads(package_json.read_text(encoding="utf-8"))
-    assert manifest["name"] == "obsidian-second-brain-pi"
-    assert ".pi/prompts" in manifest.get("pi", {}).get("prompts", [])
-    assert ".pi/skills" in manifest.get("pi", {}).get("skills", [])
-
-    prompt = REPO_ROOT / "dist/pi/.pi/prompts/obsidian-save.md"
-    assert prompt.is_file()
-    head = prompt.read_text(encoding="utf-8")[:300]
-    assert "---" in head
-    assert "description:" in head
-
-    skill = REPO_ROOT / "dist/pi/.pi/skills/obsidian-second-brain/SKILL.md"
-    assert skill.is_file()
-    skill_head = skill.read_text(encoding="utf-8")[:400]
-    assert "name: obsidian-second-brain" in skill_head
-    assert "description:" in skill_head
-
-    # Paths should be rewritten for the Pi layout, not left pointing at Claude.
-    prompt_body = prompt.read_text(encoding="utf-8")
-    assert "~/.claude/skills/obsidian-second-brain" not in prompt_body
-    assert ".pi/skills/obsidian-second-brain" in prompt_body
 
 
 def test_agent_skills_build_generates_spec_compliant_tree():
@@ -227,12 +98,12 @@ def test_agent_skills_build_generates_spec_compliant_tree():
     assert "## For future agent" in save_text
 
     # Non-capture commands get the explicit-only policy, not the proactive one.
-    research = (skills_dir / "research/SKILL.md").read_text(encoding="utf-8")
-    assert "Use only when the user explicitly asks" in research
-    assert "Use proactively" not in research
+    health = (skills_dir / "obsidian-health/SKILL.md").read_text(encoding="utf-8")
+    assert "Use only when the user explicitly asks" in health
+    assert "Use proactively" not in health
     # SKILL_ROOT is rewritten to the installed obsidian-core location.
-    assert "SKILL_ROOT" not in research
-    assert 'uv run --directory ".agents/skills/obsidian-core"' in research
+    assert "SKILL_ROOT" not in health
+    assert 'uv run --directory ".agents/skills/obsidian-core"' in health
 
     # The shared engine skill ships references, scripts, and its uv project.
     core = skills_dir / "obsidian-core"
@@ -240,91 +111,12 @@ def test_agent_skills_build_generates_spec_compliant_tree():
     assert (core / "pyproject.toml").is_file()
     assert (core / "references/ai-first-rules.md").is_file()
     assert (core / "scripts").is_dir()
-
-    # Calendar depends on a Claude-only MCP and is excluded from this build.
-    assert not (skills_dir / "obsidian-calendar").exists()
 
     # Install docs cover both the skills.sh path and the manual fallback.
     install_text = (REPO_ROOT / "dist/agent-skills/INSTALL.md").read_text(encoding="utf-8")
     assert "npx skills add" in install_text
     assert "cp -R dist/agent-skills/skills/." in install_text
     assert (REPO_ROOT / "dist/agent-skills/global-rule-snippet.md").is_file()
-
-
-def test_grok_bot_build_generates_mcp_backed_skills():
-    """The grok-bot adapter must emit skills/<name>/SKILL.md per command plus
-    the shared obsidian-core engine skill, designed for Grok Bot / Sand with
-    the user-obsidian-second-brain MCP server providing vault I/O."""
-    result = subprocess.run(
-        [BASH, "scripts/build.sh", "--platform", "grok-bot"],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-
-    assert result.returncode == 0, result.stderr
-
-    skills_dir = REPO_ROOT / "dist/grok-bot/skills"
-    assert skills_dir.is_dir()
-
-    # A command skill: frontmatter with name + description, MCP preamble, the
-    # full command body, and the embedded write spec.
-    save = skills_dir / "obsidian-save/SKILL.md"
-    assert save.is_file()
-    save_text = save.read_text(encoding="utf-8")
-    head = save_text[:1000]
-    assert "name: obsidian-save" in head
-    assert "description:" in head
-    assert "Triggers: save this" in head
-    assert "Use proactively" in head
-    # MCP instructions must be present
-    assert "user-obsidian-second-brain" in save_text
-    assert "obsidian_search" in save_text
-    assert "obsidian_save_note" in save_text
-    assert "obsidian_validate_note" in save_text
-    # Command body must be present, not just preamble
-    assert "Run obsidian-save" in save_text or "obsidian-save:" in save_text
-    assert "Scan the entire conversation" in save_text
-    assert "Group items by type" in save_text
-    assert "call obsidian_read_note" in save_text or "obsidian_read_note(" in save_text
-    # No Claude-specific language
-    assert "Execute `/obsidian-save`" not in save_text
-    assert "Spawn parallel subagents" not in save_text
-    # No filesystem Read/Write language (should be MCP calls)
-    assert "Read `" not in save_text[:2000] or "call obsidian_read_note" in save_text
-    assert "## AI-first vault rule (embedded)" in save_text
-
-    # Non-capture commands get the explicit-only policy.
-    research = (skills_dir / "research/SKILL.md").read_text(encoding="utf-8")
-    assert "Use only when the user explicitly asks" in research
-    assert "Use proactively" not in research
-    # Command body must be present
-    assert "research" in research.lower()
-    assert len(research) > 2000, "research skill body is suspiciously short"
-
-    # The shared engine skill ships references, scripts, and its uv project.
-    core = skills_dir / "obsidian-core"
-    assert (core / "SKILL.md").is_file()
-    assert (core / "pyproject.toml").is_file()
-    assert (core / "references/ai-first-rules.md").is_file()
-    assert (core / "scripts").is_dir()
-
-    # Calendar depends on a Claude-only MCP and is excluded from this build.
-    assert not (skills_dir / "obsidian-calendar").exists()
-
-    # Install docs explain the MCP + skills model.
-    install_text = (REPO_ROOT / "dist/grok-bot/INSTALL.md").read_text(encoding="utf-8")
-    assert "user-obsidian-second-brain" in install_text
-    assert "MCP server" in install_text or "MCP is the I/O layer" in install_text
-    # Should NOT hardcode .agents/skills/ as the install path
-    assert "Grok Bot and Sand load skills from the workspace `.agents/skills/` directory" not in install_text
-    # Should explain workflows are invoked with / or @
-    assert "invoked with `/` or `@`" in install_text or "invoke by name" in install_text
-    # Grok Bot has no hooks.
-    assert "no hook runtime" in install_text.lower() or "no hooks" in install_text.lower()
 
 
 def test_vault_health_json_reports_clean_linked_vault(tmp_path):
@@ -680,7 +472,7 @@ def test_mcp_vault_ops_resolves_vault_from_env_file(tmp_path, monkeypatch):
     vault.mkdir()
     env_file = tmp_path / "config.env"
     env_file.write_text(
-        f'# config\nOBSIDIAN_VAULT_PATH="{vault}"\nPERPLEXITY_API_KEY=irrelevant\n',
+        f'# config\nOBSIDIAN_VAULT_PATH="{vault}"\nSOME_OTHER_KEY=irrelevant\n',
         encoding="utf-8",
     )
     monkeypatch.delenv("OBSIDIAN_VAULT_PATH", raising=False)
@@ -988,84 +780,6 @@ def test_mcp_vault_ops_skips_claude_dir(tmp_path, monkeypatch):
     assert "wiki/Real.md" in hits
     assert not any(p.startswith(".claude") for p in hits)
     assert vault_ops.vault_health()["notes_scanned"] == 1
-
-
-def test_architect_scan_emits_manifest(tmp_path):
-    """architect_scan.py must produce a JSON manifest with the expected shape
-    on a minimal project (no network, no install)."""
-    proj = tmp_path / "proj"
-    (proj / "src" / "billing").mkdir(parents=True)
-    (proj / "src" / "billing" / "charge.py").write_text("def charge():\n    pass\n", encoding="utf-8")
-    (proj / "pyproject.toml").write_text(
-        '[project]\nname = "paymentbot"\ndependencies = ["requests"]\n', encoding="utf-8"
-    )
-
-    result = subprocess.run(
-        [sys.executable, "scripts/architect_scan.py", "--path", str(proj)],
-        cwd=REPO_ROOT, check=False, capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    data = _json_from_stdout(result.stdout)
-    assert data["name"] == "paymentbot"
-    assert data["kind"] == "python"
-    assert any(m["name"] == "billing" for m in data["modules"])
-    assert "requests" in data["dependencies"]
-    assert any(lang["language"] == "Python" for lang in data["languages"])
-
-
-_RESEARCH_MODE_PROBE = """
-import importlib
-import sys
-
-mod = importlib.import_module(sys.argv[1])
-setattr(mod, sys.argv[2], lambda *a, **k: print("CHOSE=paid") or 0)
-setattr(mod, sys.argv[3], lambda *a, **k: print("CHOSE=free") or 0)
-sys.exit(mod.main(["prog", "smoke test topic"]))
-"""
-
-
-@pytest.mark.parametrize(
-    ("module", "paid_fn", "free_fn"),
-    [
-        ("scripts.research.research", "run_paid", "run_free"),
-        ("scripts.research.research_deep", "run_paid_deep", "run_free_deep"),
-    ],
-)
-def test_research_key_in_config_env_selects_paid_mode(tmp_path, module, paid_fn, free_fn):
-    """A PERPLEXITY_API_KEY set only in ~/.config/obsidian-second-brain/.env (the
-    documented setup) must select paid mode, and no key anywhere must keep the
-    zero-config free mode. Regression fence for #124: the free-vs-paid decision
-    read os.environ before anything had loaded the .env file, so paid-mode users
-    silently got the free pipeline."""
-    fake_home = tmp_path / "home"
-    config_dir = fake_home / ".config" / "obsidian-second-brain"
-    config_dir.mkdir(parents=True)
-    vault = tmp_path / "vault"
-    vault.mkdir()
-
-    env = os.environ.copy()
-    env["HOME"] = str(fake_home)
-    env["USERPROFILE"] = str(fake_home)  # what Path.home() reads on Windows; HOME is ignored there
-    env.pop("PERPLEXITY_API_KEY", None)
-    env.pop("OBSIDIAN_VAULT_PATH", None)
-
-    def chosen_mode(env_file: str) -> str:
-        (config_dir / ".env").write_text(env_file, encoding="utf-8")
-        result = subprocess.run(
-            [sys.executable, "-c", _RESEARCH_MODE_PROBE, module, paid_fn, free_fn],
-            cwd=REPO_ROOT,
-            env=env,
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0, result.stderr
-        return result.stdout
-
-    # research_deep requires a vault path at import time; research ignores it.
-    vault_line = f"OBSIDIAN_VAULT_PATH={vault}\n"
-    assert "CHOSE=paid" in chosen_mode(vault_line + "PERPLEXITY_API_KEY=pplx-smoke-test-key\n")
-    assert "CHOSE=free" in chosen_mode(vault_line)
 
 
 def test_update_vault_integration_script_guards():
@@ -1614,8 +1328,7 @@ def test_validate_hook_skips_claude_memory_dir(tmp_path):
 
 def test_every_build_ships_vault_ops_beside_scripts(tmp_path):
     """scripts/ imports vault_ops from integrations/obsidian-mcp-server/ beside
-    it: the research vault scan (vault_terms.topic_terms, used by /research-deep
-    and /notebooklm) and the eval scripts. Builds copied scripts/ without it, so
+    it: the vault scan (vault_terms.topic_terms) and the eval scripts. Builds copied scripts/ without it, so
     on every platform but a repo checkout those commands died with
     ModuleNotFoundError (#332). Runs the import from inside each built tree."""
     subprocess.run(
@@ -1632,7 +1345,7 @@ def test_every_build_ships_vault_ops_beside_scripts(tmp_path):
     )
     roots = sorted(p.parents[3] for p in (REPO_ROOT / "dist").rglob("vault_terms.py"))
     platforms = {r.relative_to(REPO_ROOT / "dist").parts[0] for r in roots}
-    assert len(platforms) == 8, platforms
+    assert len(platforms) == 4, platforms
     failures = []
     for root in roots:
         r = subprocess.run(

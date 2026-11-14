@@ -75,7 +75,7 @@ EOF
 ## Scripts
 
 Python helpers live under \`.codex/scripts/\`. They run via
-\`(cd .codex && uv run -m scripts.research.<name> ...)\` - \`.codex/\` is a
+\`(cd .codex && uv run scripts/<name>.py ...)\` - \`.codex/\` is a
 self-contained uv project, so modules and dependencies both resolve. Skills that need them
 reference the exact invocation inside the skill body.
 
@@ -169,9 +169,9 @@ Then in your vault:
   list is the router.
 - `.codex/references/` holds shared specs (the AI-first vault rule) that skills
   reference.
-- `.codex/scripts/` holds the Python helpers invoked by the research toolkit
+- `.codex/scripts/` holds the Python helpers invoked by the
   skills, plus a `pyproject.toml` making `.codex/` a self-contained uv project.
-  Run them via `(cd .codex && uv run -m scripts.research.<name> ...)`.
+  Run them via `(cd .codex && uv run scripts/<name>.py ...)`.
 
 ## Where you start Codex is load-bearing
 

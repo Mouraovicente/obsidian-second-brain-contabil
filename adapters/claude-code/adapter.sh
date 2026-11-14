@@ -66,7 +66,7 @@ ln -sf "$(pwd)/dist/claude-code" ~/.claude/skills/obsidian-second-brain
 ln -sf "$(pwd)/dist/claude-code/commands/"*.md ~/.claude/commands/
 ```
 
-Restart Claude Code. The `/obsidian-*`, `/research`, and `/brand-*` commands
+Restart Claude Code. The `/obsidian-*` commands
 will be available.
 EOF
 }

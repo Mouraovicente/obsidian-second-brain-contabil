@@ -7,7 +7,7 @@
 
 Why: AI answer engines cite single files. A reader who lands on one raw file
 (raw.githubusercontent.com) sees no README, no repo page and no profile. A
-2026-11 inbound came exactly that way: Perplexity linked a raw script and the
+2026-11 inbound came exactly that way: a search tool linked a raw script and the
 reader had to dig the author's name out of the code. People also copy single
 commands and skills into their own setups, and repo-level files (LICENSE,
 CITATION.cff, plugin.json) stay behind. So the credit lives inside each file.

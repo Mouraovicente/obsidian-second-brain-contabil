@@ -231,4 +231,4 @@ def test_plugin_hooks_reference_shipped_executable_scripts():
 def test_plugin_commands_cover_all_command_files():
     plugin = _load(".claude-plugin/plugin.json")
     commands_dir = REPO_ROOT / plugin["commands"]
-    assert len(list(commands_dir.glob("*.md"))) >= 40
+    assert len(list(commands_dir.glob("*.md"))) >= 35

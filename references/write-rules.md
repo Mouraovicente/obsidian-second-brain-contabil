@@ -199,7 +199,7 @@ Rules on refresh:
 3. Never touch `@user` blocks, and never touch anything outside the markers (treat it as human-owned).
 4. On the first run (no markers yet), wrap the content you generate in `@generated` markers so future refreshes are safe.
 
-This lets a command be idempotent and re-runnable without the user fearing it will wipe their additions. Used by `/obsidian-architect`; available to any command that maintains a regenerable note.
+This lets a command be idempotent and re-runnable without the user fearing it will wipe their additions. Available to any command that maintains a regenerable note.
 
 ---
 

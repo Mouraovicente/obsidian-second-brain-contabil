@@ -540,7 +540,6 @@ def test_hook_shell_quotes_folder_paths(sandbox):
         ("claude-code", "scripts/crew.py", "commands/crew.md"),
         ("codex-cli", ".codex/scripts/crew.py", ".agents/skills/crew/SKILL.md"),
         ("agent-skills", "skills/obsidian-core/scripts/crew.py", "skills/crew/SKILL.md"),
-        ("grok-bot", "skills/obsidian-core/scripts/crew.py", "skills/crew/SKILL.md"),
     ],
 )
 def test_built_crew_runs_from_an_unrelated_folder(sandbox, platform, script_path, command_path):
@@ -556,10 +555,6 @@ def test_built_crew_runs_from_an_unrelated_folder(sandbox, platform, script_path
     build = REPO / "dist" / platform
     command = (build / command_path).read_text(encoding="utf-8")
     assert "Crew works without Obsidian" in command or "one logbook without Obsidian" in command
-    if platform == "grok-bot":
-        assert "All vault operations go through" not in command
-        assert "skills/obsidian-core/references/ai-first-rules.md" in command
-        assert ".agents/skills/" not in command
     run("--dir", str(folder), "setup", "--agents", "codex", script=build / script_path)
     installed = home / ".config/crew/crew.py"
     run(

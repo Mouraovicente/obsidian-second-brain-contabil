@@ -7,7 +7,7 @@
 # scripts/update-vault-integration.sh - guarded updater for copied dist builds
 # =============================================================================
 # The plugin-marketplace and symlink installs update themselves; a dist tree
-# COPIED into a vault (Codex / OpenCode / Antigravity / Gemini / Hermes / Pi)
+# COPIED into a vault (Codex / OpenCode / Antigravity)
 # goes stale. This updates it safely:
 #
 #   1. verify   - clean repo, recognizable remote, vault exists
@@ -65,9 +65,7 @@ VAULT="$(cd "$VAULT" 2>/dev/null && pwd)" || die "vault path does not exist"
 detect_platform() {
   [[ -d "$VAULT/.agents/skills" ]] && { echo "agent-skills"; return; }
   [[ -d "$VAULT/.codex"        ]] && { echo "codex-cli";    return; }
-  [[ -d "$VAULT/.gemini"       ]] && { echo "gemini-cli";   return; }
   [[ -d "$VAULT/.opencode"     ]] && { echo "opencode";     return; }
-  [[ -d "$VAULT/.pi"           ]] && { echo "pi";           return; }
   echo ""
 }
 if [[ -z "$PLATFORM" ]]; then
@@ -83,8 +81,6 @@ integration_paths() {
     agent-skills) echo ".agents/skills" ;;
     codex-cli)    echo "AGENTS.md INSTALL.md .agents .codex" ;;
     opencode)     echo "AGENTS.md INSTALL.md .opencode" ;;
-    gemini-cli)   echo "GEMINI.md INSTALL.md .gemini" ;;
-    pi)           echo ".pi package.json INSTALL.md" ;;
     *)            die "no integration map for platform: $PLATFORM" ;;
   esac
 }

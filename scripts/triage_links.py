@@ -4,21 +4,18 @@
 # Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """
-triage_links.py - the loop that sorts dangling wikilinks into keep / create / delete.
+triage_links.py - sorts dangling wikilinks into keep / create / delete.
 
-It reads each broken link and the sentence it sits in, asks Claude what it is, and
-tallies the verdict. Report-only by default: it decides, it does not edit.
+Fully local, no network. The default run lists each distinct broken link with the
+sentence it sits in; the agent in the session judges each one and writes a verdicts
+file with one line per link ("KEEP [[x]]", "CREATE [[x]]" or "DELETE [[x]]").
+`--apply --from <verdicts>` then acts on it. Report-only unless --apply.
 
     uv run scripts/triage_links.py --path "/vault" --limit 20
-
-Needs ANTHROPIC_API_KEY in the environment.
+    uv run scripts/triage_links.py --path "/vault" --apply --from verdicts.txt
 """
 import argparse
-import json
-import os
 import re
-import urllib.request
-from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -26,42 +23,6 @@ from note_io import NoteChangedError, read_exact, write_exact_if_unchanged
 from vault_health import check_wanted_notes, load_vault, load_vault_config, replace_outside_code
 
 LINK_IN_MSG = re.compile(r"\[\[(.+?)\]\]")
-MODEL = "claude-haiku-4-5"
-
-PROMPT = """You triage a broken wikilink in a personal Obsidian vault written with AI help.
-The link points to a note that does not exist yet.
-
-Note: {note}
-The link appears in this line:
-{line}
-Link: [[{link}]]
-
-Pick ONE:
-KEEP - a deliberate placeholder the author will likely turn into a real note later
-CREATE - the topic is substantial and clearly deserves its own note now
-DELETE - a typo, a one-off, or junk; the link should just be removed
-
-Reply as: WORD - up to 6 word reason"""
-
-
-def ask_claude(note, line, link, key):
-    body = json.dumps({
-        "model": MODEL,
-        "max_tokens": 40,
-        "messages": [{"role": "user",
-                      "content": PROMPT.format(note=note, line=line[:300], link=link)}],
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages", data=body,
-        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
-                 "content-type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        out = json.load(r)
-    text = out["content"][0]["text"].strip()
-    verdict = text.split()[0].upper().strip(":-")
-    if verdict not in {"KEEP", "CREATE", "DELETE"}:
-        verdict = "KEEP"
-    return verdict, text
 
 
 def line_for(vault, rel, link):
@@ -173,9 +134,6 @@ def main():
         print(f"Wanted notes now: {after}\n")
         return
 
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        raise SystemExit("set ANTHROPIC_API_KEY")
     broken = check_wanted_notes(load_vault(vault, load_vault_config(vault)), vault,
                                     load_vault_config(vault))
 
@@ -192,15 +150,13 @@ def main():
 
     print(f"\nTriaging {min(args.limit, len(unique))} of {len(unique)} distinct dangling links "
           f"({len(broken)} occurrences).\n")
-    tally, n = Counter(), 0
+    n = 0
     for link, rel in unique:
         if n >= args.limit:
             break
-        verdict, text = ask_claude(Path(rel).stem, line_for(vault, rel, link), link, key)
-        tally[verdict] += 1
         n += 1
-        print(f"  {verdict:<7} [[{link}]]  ({text.split('-',1)[-1].strip()[:40]})")
-    print("\nVerdicts: " + ", ".join(f"{k} {v}" for k, v in tally.most_common()))
+        print(f"  [[{link}]]  in {Path(rel).stem}: {line_for(vault, rel, link)[:300]}")
+    print("\nJudge each link as KEEP, CREATE or DELETE and write one 'WORD [[link]]' line each.")
     print("Report only. Nothing changed.\n")
 
 

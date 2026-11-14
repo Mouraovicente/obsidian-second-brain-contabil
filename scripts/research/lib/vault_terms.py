@@ -4,8 +4,8 @@
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Topic tokenization for vault scans - delegates to the search tokenizer.
 
-One tokenizer, one fix (#159, #188, #192, #212): `vault_scan` in notebooklm.py
-and research_deep.py each kept a private whitespace-split + `len(w) > 2` copy
+One tokenizer, one fix (#159, #188, #192, #212): `vault_scan` in two research
+scripts (since removed) each kept a private whitespace-split + `len(w) > 2` copy
 that returned nothing for CJK topics, and the copies survived three fixes to
 the canonical tokenizer because every fix landed in one path and not the
 others. This module is the single sanctioned import path to

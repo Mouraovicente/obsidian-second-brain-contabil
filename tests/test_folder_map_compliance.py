@@ -18,10 +18,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # The commands the stress-test sweep fixed. New commands should be born
 # compliant and can be added here as they are reviewed.
 SWEPT = [
-    "idea-discovery.md", "obsidian-architect.md", "obsidian-board.md",
-    "obsidian-calendar.md", "obsidian-daily.md", "obsidian-emerge.md",
+    "idea-discovery.md", "obsidian-board.md",
+    "obsidian-daily.md", "obsidian-emerge.md",
     "obsidian-export.md", "obsidian-ingest.md", "obsidian-learn.md", "obsidian-panel.md",
-    "obsidian-person.md", "obsidian-project.md", "obsidian-projects.md",
+    "obsidian-person.md", "obsidian-project.md",
     "obsidian-recap.md", "obsidian-reconcile.md", "obsidian-recurring.md",
     "obsidian-synthesize.md", "obsidian-task.md", "vault-deep-synthesis.md",
 ]

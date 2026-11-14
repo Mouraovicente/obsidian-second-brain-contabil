@@ -304,17 +304,17 @@ def test_validate_hook_leaves_posix_backslash_paths_alone(tmp_path):
     assert "frontmatter" in json.loads(r.stdout)["systemMessage"]
 
 
-def test_research_config_honors_env_file_override(tmp_path):
+def test_config_honors_env_file_override(tmp_path):
     """OBSIDIAN_ENV_FILE points every half of the toolkit at one file. The MCP
-    server and the write-time hook already honored it (#160); the research
-    loaders and the retrieval eval read only the default location, so a user
+    server and the write-time hook already honored it (#160); the config
+    loader and the retrieval eval read only the default location, so a user
     whose config lives elsewhere (or whose HOME and USERPROFILE disagree on
     Windows) could not steer them. Environment still wins over the file."""
     vault = tmp_path / "vault"
     vault.mkdir()
     env_file = tmp_path / "elsewhere.env"
     env_file.write_text(
-        f"OBSIDIAN_VAULT_PATH={vault}\nPERPLEXITY_API_KEY=pplx-from-the-override-file\n",
+        f"OBSIDIAN_VAULT_PATH={vault}\n",
         encoding="utf-8",
     )
     empty_home = tmp_path / "home"
@@ -322,7 +322,6 @@ def test_research_config_honors_env_file_override(tmp_path):
     base_env = dict(os.environ, OBSIDIAN_ENV_FILE=str(env_file),
                     HOME=str(empty_home), USERPROFILE=str(empty_home))
     base_env.pop("OBSIDIAN_VAULT_PATH", None)
-    base_env.pop("PERPLEXITY_API_KEY", None)
 
     def run(code: str, **extra: str):
         r = subprocess.run(
@@ -332,23 +331,8 @@ def test_research_config_honors_env_file_override(tmp_path):
         assert r.returncode == 0, r.stderr
         return r.stdout.strip().splitlines()
 
-    # Each loader alone, in its own interpreter, so neither can piggyback on the other.
     out = run("from scripts.research.lib import config; print(config.VAULT_PATH)")
     assert out == [str(vault)], "config.py must read the vault path from OBSIDIAN_ENV_FILE"
-    out = run(
-        "import os; from scripts.research.lib import source_config; "
-        "print(source_config._ENV_PATH); print(os.environ.get('PERPLEXITY_API_KEY', ''))"
-    )
-    assert out == [str(env_file), "pplx-from-the-override-file"], (
-        "source_config.py must load the override file itself"
-    )
-    # The environment still wins over the file.
-    out = run(
-        "import os; from scripts.research.lib import source_config; "
-        "print(os.environ['PERPLEXITY_API_KEY'])",
-        PERPLEXITY_API_KEY="pplx-from-the-environment",
-    )
-    assert out == ["pplx-from-the-environment"], "a variable set in the environment must not be overridden by the file"
 
 
 @pytest.mark.parametrize("os_name", ["nt", "posix"])

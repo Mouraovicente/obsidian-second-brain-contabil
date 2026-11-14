@@ -4,8 +4,8 @@
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Obsidian Second Brain MCP server.
 
-Exposes the vault as a set of MCP tools so any MCP client - Hermes Agent (via
-`discover_mcp_tools()`), Claude Desktop, Claude Code, Cursor - can search, read,
+Exposes the vault as a set of MCP tools so any MCP client - Claude Desktop,
+Claude Code, Cursor - can search, read,
 and add notes to an Obsidian vault. This is the "second brain as a tool" connector
 (GitHub Issue #60): it does NOT touch the agent's own memory; it gives the agent a
 doorway into the knowledge vault.

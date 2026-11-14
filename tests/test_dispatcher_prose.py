@@ -31,10 +31,8 @@ DIST = REPO_ROOT / "dist"
 
 # (adapter dir, built dispatcher path relative to dist/<platform>/)
 DISPATCHERS = [
-    ("gemini-cli", "GEMINI.md"),
     ("opencode", "AGENTS.md"),
     ("codex-cli", "AGENTS.md"),
-    ("pi", ".pi/skills/obsidian-second-brain/SKILL.md"),
 ]
 
 MARKER = "Treat the AI-first vault rule"
@@ -110,10 +108,10 @@ def test_the_cited_path_exists_in_that_platforms_build(built, platform, dispatch
 
 
 # Builds that generate their own frontmatter, so a source `trigger-mode` only
-# reaches the model if the adapter encodes it. The other three (claude-code,
-# gemini-cli, opencode) copy the command body verbatim, frontmatter included,
+# reaches the model if the adapter encodes it. The other two (claude-code,
+# opencode) copy the command body verbatim, frontmatter included,
 # so the field travels on its own and needs no encoding.
-GENERATED_DESC_PLATFORMS = ["codex-cli", "agent-skills", "hermes", "pi"]
+GENERATED_DESC_PLATFORMS = ["codex-cli", "agent-skills"]
 
 
 @pytest.mark.parametrize("platform", GENERATED_DESC_PLATFORMS)

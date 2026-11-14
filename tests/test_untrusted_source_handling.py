@@ -222,21 +222,6 @@ def test_health_report_carries_the_unattended_info_line(tmp_path):
     assert after["total_issues"] == before["total_issues"] + 1
 
 
-def test_research_deep_treats_synthesis_bullets_as_proposals():
-    """The synthesis is model output over fetched pages, not the user speaking."""
-    script = (REPO_ROOT / "scripts" / "research" / "research_deep.py").read_text(encoding="utf-8")
-    assert "explicit propagation instructions" not in script, (
-        "the script still tells the caller to honour synthesis bullets as instructions; "
-        "a fetched page can plant a bullet naming one of the user's real notes"
-    )
-    assert "PROPOSALS" in script
-
-    cmd = (REPO_ROOT / "commands" / "research-deep.md").read_text(encoding="utf-8")
-    assert "untrusted text" in cmd, (
-        "the command guards invented PATHS but never invented CONTENT"
-    )
-
-
 def test_recall_hook_never_injects_verbatim_raw_sources():
     """This hook fires on every prompt, so de-weighting is not enough."""
     hook = (REPO_ROOT / "hooks" / "obsidian-recall.py").read_text(encoding="utf-8")

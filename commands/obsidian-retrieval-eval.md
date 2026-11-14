@@ -12,7 +12,7 @@ Use the obsidian-second-brain skill. Execute `/obsidian-retrieval-eval $ARGUMENT
 
 You cannot improve retrieval you have not measured. This scores the vault's REAL search (the term-frequency, title-weighted ranking in `integrations/obsidian-mcp-server/vault_ops.py`, the same engine behind `/obsidian-find` and the MCP connector) against natural-language questions whose correct answer note is known - so "should I add a vector index / better ranking?" becomes a number and a list of failures, not a hunch.
 
-The optional argument is a number of cases to (re)generate first (without `XAI_API_KEY` the generator silently falls back to verbatim-sentence heuristics - fine for keyword-style cases, weak for paraphrase-style) (e.g. `30`), or `report` to also write the result to the vault. No argument: evaluate the existing cases.
+The optional argument is a number of cases to (re)generate first (e.g. `30`; the generator is a local verbatim-sentence heuristic, fine for keyword-style cases, weak for paraphrase-style), or `report` to also write the result to the vault. No argument: evaluate the existing cases.
 
 1. Read `_CLAUDE.md` first if it exists in the vault root.
 
@@ -20,7 +20,7 @@ The optional argument is a number of cases to (re)generate first (without `XAI_A
    ```bash
    uv run --directory "SKILL_ROOT" python scripts/eval/retrieval_eval.py --generate 30
    ```
-   This samples real notes and, for each, has an LLM write a question whose answer is in that note while AVOIDING the note's title words (so it tests retrieval, not string match). The note's path is the gold answer. Cases are gitignored - they contain private note paths.
+   This samples real notes and, for each, builds a question from a sentence of that note that AVOIDS the note's title words (so it tests retrieval, not string match; local, no network). The note's path is the gold answer. Cases are gitignored - they contain private note paths.
 
 3. Run the evaluation (from the same skill root):
    ```bash

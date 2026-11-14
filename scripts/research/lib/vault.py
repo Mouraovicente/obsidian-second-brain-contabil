@@ -25,12 +25,7 @@ from .config import VAULT_PATH
 
 # Subfolder routing per command (relative to vault root, under Research/)
 SUBFOLDERS = {
-    "x-read":      Path("Research") / "X-reads",
-    "x-pulse":     Path("Research") / "X-pulse",
     "research":    Path("Research") / "Web",
-    "research-deep": Path("Research") / "Deep",
-    "youtube":     Path("Research") / "YouTube",
-    "podcast":     Path("Research") / "Podcasts",
 }
 
 

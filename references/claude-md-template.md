@@ -59,7 +59,7 @@ This vault is designed for **future agent** to read and reason over, not for hum
 6. **Cross-links are mandatory** - Every person, project, idea, decision, or concept referenced uses `[[wikilinks]]` so the graph is traversable.
 7. **Confidence levels** - Where applicable, mark claims as `stated | high | medium | speculation` so future agent knows what to trust vs verify.
 
-This rule applies to all `/obsidian-*` and `/research*` commands, all scheduled agents, and any direct vault writes.
+This rule applies to all `/obsidian-*` commands, the background agent, and any direct vault writes.
 
 ---
 

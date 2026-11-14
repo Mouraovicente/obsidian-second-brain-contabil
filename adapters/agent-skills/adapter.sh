@@ -13,8 +13,7 @@
 # a single build serves all of them instead of a near-duplicate adapter each.
 #
 # Emits, at the dist root:
-#   skills/<name>/SKILL.md        - one skill per command (43; calendar is
-#                                   Claude-only). Frontmatter is spec-minimal
+#   skills/<name>/SKILL.md        - one skill per command (38). Frontmatter is spec-minimal
 #                                   (name, description, metadata.category) so
 #                                   OpenCode's strict validator accepts it.
 #   skills/obsidian-core/         - the shared engine skill: references/,
@@ -163,7 +162,7 @@ _ask_emit_core() {
   cat > "$dst/SKILL.md" <<EOF
 ---
 name: ${ASK_CORE}
-description: "Shared engine for the obsidian-second-brain skills - the AI-first write spec (references/), the Python research + health toolkit (scripts/), and its uv project (pyproject.toml). Support files only; the other skills call into it. Do not invoke directly. Install it alongside the command skills."
+description: "Shared engine for the obsidian-second-brain skills - the AI-first write spec (references/), the Python health toolkit (scripts/), and its uv project (pyproject.toml). Support files only; the other skills call into it. Do not invoke directly. Install it alongside the command skills."
 metadata:
   category: meta
 ---
@@ -181,9 +180,9 @@ not a task skill - do not run it on its own.
   read it. Every command skill also embeds the AI-first spec inline, so the rule
   survives an unreachable path - but an unreachable path must never pass in
   silence.
-- \`scripts/\` - Python helpers for the research toolkit and vault health. The
+- \`scripts/\` - Python helpers for vault health and maintenance. The
   command skills invoke them as
-  \`uv run --directory ${ASK_CORE_PATH} -m scripts.research.<name> ...\`
+  \`uv run --directory ${ASK_CORE_PATH} scripts/<name>.py ...\`
   (or \`uv run --directory ${ASK_CORE_PATH} scripts/<name>.py ...\`), run from
   your workspace root.
 - \`pyproject.toml\` - makes this directory a self-contained uv project, so both
@@ -256,7 +255,7 @@ npx skills add ./dist/agent-skills -g -a antigravity -a codex -a opencode
 npx skills update
 \`\`\`
 
-Install the full set. The research and health skills call into
+Install the full set. The health and ingest skills call into
 \`${ASK_CORE}\`, so cherry-picking individual skills breaks those; the full-set
 install is the supported path.
 
@@ -293,7 +292,7 @@ cp -R dist/agent-skills/skills/. /path/to/your/vault/.agents/skills/
 ## What is NOT covered
 
 Agent Skills cover the commands only. The MCP vault server, Claude Code hooks,
-and the scheduled maintenance agents remain Claude Code / Hermes extras. The
+and the scheduled maintenance agents remain Claude Code extras. The
 skills are made self-sufficient (vault-root resolution + the embedded write
 spec) to compensate. For the optional always-on vault-routing rule, see
 \`global-rule-snippet.md\`.
@@ -323,7 +322,7 @@ Agent Skills. When it is:
 1. Resolve the vault root: \`\$OBSIDIAN_VAULT_PATH\` if set, else the workspace root.
 2. Read \`_CLAUDE.md\` at the vault root first, if present, for vault conventions.
 3. Prefer the installed \`.agents/skills/\` skills for vault actions (save, capture,
-   log, decide, research, health, ...).
+   log, decide, health, ...).
 $(emit_ai_first_rule "${ASK_CORE_PATH}/references/ai-first-rules.md" 4)
 \`\`\`
 EOF

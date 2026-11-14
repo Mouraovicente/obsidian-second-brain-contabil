@@ -1323,7 +1323,7 @@ def validate_note(rel: str) -> Dict[str, Any]:
         issues.append(f"missing '## {_PREAMBLE_HEADING}' preamble")
     else:
         # Count only consecutive headings at the start of this note's preamble.
-        # NotebookLM bundles legitimately embed complete source notes, each with
+        # Bundled notes legitimately embed complete source notes, each with
         # its own preamble later in the body; those are not duplicates of the
         # outer note. The real corruption is repeated empty headings before the
         # first summary sentence.
@@ -1436,7 +1436,6 @@ _EXCLUDED_SKILLS = {
     "obsidian-visualize",
     "obsidian-challenge",
     "obsidian-health",
-    "obsidian-calendar",
     "obsidian-agenda",
     "obsidian-meeting",
     "obsidian-schedule",

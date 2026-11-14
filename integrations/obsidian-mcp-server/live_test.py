@@ -4,9 +4,9 @@
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Live MCP round-trip test for the Obsidian connector.
 
-Drives server.py with a real MCP client over stdio - the same protocol Hermes
-Agent / Claude Desktop / Cursor use - and exercises every tool. Proves the
-connector works end-to-end without needing Hermes itself installed.
+Drives server.py with a real MCP client over stdio - the same protocol Claude
+Desktop / Cursor use - and exercises every tool. Proves the
+connector works end-to-end without needing a desktop client installed.
 
 Usage:
     OBSIDIAN_VAULT_PATH=/path/to/vault uv run --no-project --with 'mcp<2' python live_test.py

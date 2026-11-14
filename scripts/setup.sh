@@ -102,12 +102,11 @@ jq --arg vault "$VAULT" '
 
 green "   OBSIDIAN_VAULT_PATH set"
 
-# Wire the vault path into the research toolkit .env so standalone runs resolve it
+# Wire the vault path into the config .env (if one exists) so standalone runs resolve it
 if [ -f "$ENV_FILE" ]; then
   # umask 077 on the rewrite: the temp file is created fresh, so under a default
   # umask the mv silently replaced install.sh's 0600 with 0644 and exposed every
-  # API key in this file to any other account on the machine. Same pattern as
-  # integrations/telegram-journal/setup.sh, plus an explicit chmod as a backstop.
+  # setting in this file to any other account on the machine. An explicit chmod is the backstop.
   ( umask 077
     VAULT="$VAULT" awk '
       /^OBSIDIAN_VAULT_PATH=/ { print "OBSIDIAN_VAULT_PATH=" ENVIRON["VAULT"]; done=1; next }
@@ -232,7 +231,7 @@ step "4. MCP server (optional)..."
 echo "   This repo ships its own MCP server (integrations/obsidian-mcp-server/)."
 echo "   It is optional: in Claude Code, Claude reads/writes vault files directly"
 echo "   and everything works without it. The server is mainly useful for other"
-echo "   MCP clients (Claude Desktop, Cursor, Hermes). It needs 'uv' on PATH."
+echo "   MCP clients (Claude Desktop, Cursor). It needs 'uv' on PATH."
 echo ""
 MCP_CMD="claude mcp add obsidian-second-brain -s user -e OBSIDIAN_VAULT_PATH=\"$VAULT\" -- uv run --no-project --with 'mcp<2' python \"$SKILL_DIR/integrations/obsidian-mcp-server/server.py\""
 REPLY=n

@@ -89,7 +89,7 @@ _category_title() {
   case "$1" in
     vault)    echo "Vault - daily writing, capture, find" ;;
     thinking) echo "Thinking - synthesis, decisions, learning, reviews" ;;
-    research) echo "Research - bring external sources into the vault" ;;
+    research) echo "Ingest - bring local or web sources into the vault" ;;
     meta)     echo "Meta - vault setup, health, structure" ;;
     *)        echo "${1^}" ;;
   esac
@@ -311,7 +311,7 @@ rewrite_tool_neutral() {
 # Rewrite SKILL_ROOT to the directory holding scripts/ and references/.
 # Pass a path that resolves from the working directory the platform actually
 # runs in, not from the built tree. `.` only works where the agent's CWD is the
-# install root; hermes points the agent at the vault instead, so it passes the
+# install root; a build can instead point the agent at the vault, passing the
 # concrete install path (#191).
 rewrite_skill_root() {
   local file="$1" skill_root="$2"
@@ -352,9 +352,9 @@ copy_scripts_with_project() {
 
 # copy_vault_ops <src-root> <dst-root>
 # scripts/ imports vault_ops from integrations/obsidian-mcp-server/ beside it:
-# the research vault scan (scripts/research/lib/vault_terms.py) and the eval
-# scripts. A build that ships scripts/ without it crashes /research-deep and
-# /notebooklm with ModuleNotFoundError (#332). Same relative path, so the
+# the vault scan (scripts/research/lib/vault_terms.py) and the eval scripts.
+# A build that ships scripts/ without it crashes them with
+# ModuleNotFoundError (#332). Same relative path, so the
 # imports resolve unchanged; vault_ops needs only stdlib and scripts/osb_env.py.
 copy_vault_ops() {
   local src="$1/integrations/obsidian-mcp-server/vault_ops.py"
@@ -422,7 +422,7 @@ skill_display_title() {
 # Print the skill's own title as the first body heading, then a blank line.
 #
 # OpenClaw's skill picker (openclaw/openclaw#184724) takes the display name
-# from the first ATX H1. The agent-skills and grok-bot builds embed
+# from the first ATX H1. The agent-skills build embeds
 # references/ai-first-rules.md, which opens with "# AI-First Note Rules".
 # A command whose body has no H1 of its own then publishes that shared
 # heading as its name. The title goes first so the embedded spec, which is
@@ -453,11 +453,11 @@ emit_skill_title() {
 #
 # Adapters that emit native skills write their own frontmatter, so a source
 # `trigger-mode: proactive` does not travel unless the adapter puts it there.
-# It was encoded in agent-skills only, which left codex-cli, hermes and pi
+# It was encoded in agent-skills only, which left codex-cli
 # shipping purely reactive skills - 7 of the 8 commands that declare the field
 # are proactive, so those builds lost the signal on all 7 (#181, reported by
 # @konsone). The adapters that copy the command body verbatim (claude-code,
-# gemini-cli, opencode) keep the frontmatter and do not need this.
+# opencode) keep the frontmatter and do not need this.
 #
 # One definition rather than four, for the same reason emit_ai_first_rule is:
 # copies drift silently, and the drift is invisible per platform.

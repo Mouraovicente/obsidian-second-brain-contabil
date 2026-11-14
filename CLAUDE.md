@@ -2,16 +2,16 @@
 
 Operating instructions for Claude Code when working inside this repo.
 
-This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 49 slash commands across 4 layers (vault management, thinking tools, research toolkit, scheduled agents).
+This is the source repo for **obsidian-second-brain**, a Claude Code skill that turns any Obsidian vault into a living AI-first second brain. The skill ships 38 slash commands across 2 layers (vault management and thinking tools), plus an optional background agent and a write-time validator hook. This repo is a slimmed fork for accounting offices: the external research toolkit, Telegram bot, and non-Claude/Codex platform builds were removed.
 
 If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside their vault, not this file. This file is for working on the skill's source code.
 
 ## Repo layout
 
-- `commands/` - 49 slash command definitions, one `.md` per command. **This is the platform-neutral source.** Adapters compile it for each platform.
+- `commands/` - 38 slash command definitions, one `.md` per command. **This is the platform-neutral source.** Adapters compile it for each platform.
 - `references/` - shared specs that commands link to. **`ai-first-rules.md` is the canonical vault-write spec** and is non-negotiable.
-- `scripts/` - Python helpers (`bootstrap_vault.py`, `vault_health.py`, the `research/` toolkit), plus `build.sh` (the adapter orchestrator) and `lib.sh`.
-- `adapters/` - platform translation layer. `lib.sh` holds shared parsing helpers. `claude-code/`, `codex-cli/`, `gemini-cli/`, `opencode/`, `hermes/`, `pi/`, `agent-skills/`, `grok-bot/` each ship an `adapter.sh`.
+- `scripts/` - Python helpers (`bootstrap_vault.py`, `vault_health.py`, and the shared `research/lib` config/vault helpers), plus `build.sh` (the adapter orchestrator) and `lib.sh`.
+- `adapters/` - platform translation layer. `lib.sh` holds shared parsing helpers. `claude-code/`, `codex-cli/`, `opencode/`, `agent-skills/` each ship an `adapter.sh`.
 - `dist/` - build output, one tree per platform. **Gitignored.** Regenerate with `bash scripts/build.sh` (all platforms) or `bash scripts/build.sh --platform <name>`.
 - `hooks/` - Claude Code hooks shipped with the skill.
 - `SKILL.md` - full operating manual loaded by Claude when the skill activates.
@@ -22,7 +22,7 @@ If you are Claude operating on a user's vault, you want `_CLAUDE.md` inside thei
 
 ### The adapter pattern
 
-Source files in `commands/` use Claude Code's slash-command shape. The Claude Code adapter is an identity copy. The other adapters translate per platform: `codex-cli`, `hermes`, `agent-skills`, and `grok-bot` emit **native skills** (one `SKILL.md` per command; `agent-skills` is a single spec-compliant `.agents/skills/` tree that Codex, OpenCode, and Google Antigravity all read, with a shared `obsidian-core` engine skill; `grok-bot` emits Grok Bot / Sand skills that use the `user-obsidian-second-brain` MCP server for vault I/O), `pi` emits a Pi package (`.pi/prompts/` + `.pi/skills/`), and `gemini-cli` / `opencode` emit a dispatcher file (`GEMINI.md` / `AGENTS.md`) with an **auto-generated routing table** built from each command's `description:` frontmatter, plus the command bodies under `.gemini/` / `.opencode/`. Tool-name references like `Read tool` are rewritten to neutral wording (`read files`) so the instructions still make sense outside Claude Code.
+Source files in `commands/` use Claude Code's slash-command shape. The Claude Code adapter is an identity copy. The other adapters translate per platform: `codex-cli` and `agent-skills` emit **native skills** (one `SKILL.md` per command; `agent-skills` is a single spec-compliant `.agents/skills/` tree that Codex, OpenCode, and Google Antigravity all read, with a shared `obsidian-core` engine skill), and `opencode` emits a dispatcher file (`AGENTS.md`) with an **auto-generated routing table** built from each command's `description:` frontmatter, plus the command bodies under `.opencode/`. Tool-name references like `Read tool` are rewritten to neutral wording (`read files`) so the instructions still make sense outside Claude Code.
 
 **When adding a new command, only edit `commands/<name>.md`.** The adapters pick it up automatically on the next build. Optional frontmatter fields: `exclude: [<platform>]` to opt out per platform.
 
@@ -49,7 +49,7 @@ If you are editing a command file in `commands/`, do not rewrite the AI-first pr
 ## Adding a new command
 
 1. Create `commands/<name>.md` with `description:` frontmatter and operating instructions.
-2. If it runs Python, add `scripts/research/<name>.py` (or appropriate subfolder).
+2. If it runs Python, add `scripts/<name>.py` (or appropriate subfolder).
 3. **Apply the AI-first rule to every vault write.** Reference `references/ai-first-rules.md` from the command body so future agent has the spec inline.
 4. If the command produces a new note type, add its frontmatter schema to `references/ai-first-rules.md`.
 5. Update `SKILL.md` (Layer section + command list) and `README.md` (commands table).

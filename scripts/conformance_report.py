@@ -5,7 +5,7 @@
 # Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
 """Generate the public per-platform conformance board.
 
-The repo claims eight platform builds. Until now nothing verified that claim in
+The repo claims four platform builds. Until now nothing verified that claim in
 a way a reader could check, and nothing verified it in a way the maintainer
 could feel: they use Claude Code, whose adapter is an identity copy, so a break
 in any other build was invisible in daily use and invisible in CI.
@@ -48,12 +48,8 @@ CITED_REFERENCE = re.compile(r"[^\s`(\"']*references/[a-z0-9-]+\.md")
 PLATFORM_LABEL = {
     "claude-code": "Claude Code",
     "codex-cli": "Codex CLI",
-    "gemini-cli": "Gemini CLI",
     "opencode": "OpenCode",
     "agent-skills": "Agent Skills",
-    "grok-bot": "Grok Bot",
-    "hermes": "Hermes",
-    "pi": "Pi",
 }
 
 PASS, FAIL = "pass", "FAIL"

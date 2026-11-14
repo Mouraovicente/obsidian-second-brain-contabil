@@ -12,8 +12,7 @@
 # point at another drive (a corporate roaming home) and would split the config
 # between the bash and Python halves (#242). Elsewhere HOME is the home.
 #
-# Sourced by install.sh, update.sh, scripts/setup.sh, scripts/run-command.sh and
-# integrations/telegram-journal/setup.sh. Two files carry an inline copy of the
+# Sourced by install.sh, update.sh, scripts/setup.sh, and scripts/run-command.sh. Two files carry an inline copy of the
 # case block on purpose, because they must stay standalone: hooks/validate-ai-first.sh
 # (copied into other harnesses' hook systems by hand) and scripts/quick-install.sh
 # (curl | bash, before any checkout exists). tests/test_platform_home.py fails

@@ -98,7 +98,7 @@ def sandbox(tmp_path_factory):
 
 
 def test_an_unclaimed_platform_ships_no_credit_line(sandbox):
-    assert "maintained by" not in _build("hermes", sandbox)
+    assert "maintained by" not in _build("agent-skills", sandbox)
 
 
 def test_a_claimed_platform_ships_its_owner_inside_the_build(sandbox):
@@ -106,11 +106,11 @@ def test_a_claimed_platform_ships_its_owner_inside_the_build(sandbox):
     owners = sandbox / "adapters" / "OWNERS.md"
     original = owners.read_text(encoding="utf-8")
     owners.write_text(
-        original.replace("| pi | unclaimed |",
-                         "| pi | [@testowner](https://github.com/testowner) |"),
+        original.replace("| opencode | unclaimed |",
+                         "| opencode | [@testowner](https://github.com/testowner) |"),
         encoding="utf-8")
     try:
-        install = _build("pi", sandbox)
+        install = _build("opencode", sandbox)
         assert "@testowner" in install, (
             "a claimed platform's build carries no credit, so the one thing an "
             "owner gets in return does not happen"
@@ -126,7 +126,7 @@ def test_a_malformed_owners_file_does_not_break_the_build(sandbox):
     original = owners.read_text(encoding="utf-8")
     owners.write_text("total garbage, no table at all\n", encoding="utf-8")
     try:
-        assert "maintained by" not in _build("pi", sandbox)
+        assert "maintained by" not in _build("opencode", sandbox)
     finally:
         owners.write_text(original, encoding="utf-8")
 

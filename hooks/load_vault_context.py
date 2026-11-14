@@ -80,7 +80,7 @@ def skill_root_block() -> str:
         f"**Skill root** (obsidian-second-brain): `{root}`\n"
         f"Its bundled `scripts/`, `references/`, and `commands/` live under that path. "
         f"To run a bundled script from any working directory, hand the root to uv, e.g. "
-        f'`uv run --directory "{root}" -m scripts.research.research "<topic>"`. '
+        f'`uv run --directory "{root}" scripts/vault_health.py --path "<vault>"`. '
         f"Do not cd, and do not assume a cloned-repo location.\n"
     )
 

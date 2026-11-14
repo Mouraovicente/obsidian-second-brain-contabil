@@ -39,11 +39,7 @@ Available platforms:
   agent-skills  - Antigravity / Codex CLI / OpenCode (unified .agents/skills/ tree)
   claude-code   - Claude Code (slash commands + CLAUDE.md)
   codex-cli     - OpenAI Codex CLI (native Agent Skills, .agents/skills/)
-  gemini-cli    - Gemini CLI (GEMINI.md + .gemini/commands/)
-  grok-bot      - Grok Bot / Sand (SKILL.md + MCP user-obsidian-second-brain)
-  hermes        - Nous Research Hermes Agent (native skills, skills/<category>/)
   opencode      - OpenCode (AGENTS.md + .opencode/commands/)
-  pi            - Pi Coding Agent (package.json + .pi/prompts/ + .pi/skills/)
 EOF
       exit 0
       ;;

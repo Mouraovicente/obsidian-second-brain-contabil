@@ -2,8 +2,7 @@
 
 Two gaps the audit named that no test covered.
 
-The .env file holds every research API key. install.sh creates it at 0600 and
-setup.sh then rewrites it through a temp file, which under a default umask
+The .env file is the local settings file. setup.sh rewrites it through a temp file, which under a default umask
 replaced that with 0644 - readable by any other account on the machine. The
 repo already had the analogous guard for vault notes
 (test_note_safety::test_write_exact_preserves_permission_bits); the credential
@@ -36,7 +35,7 @@ COMMANDS = REPO_ROOT / "commands"
 def test_setup_preserves_the_env_file_mode(tmp_path):
     """Runs the real rewrite pipeline from setup.sh against a 0600 file."""
     env = tmp_path / ".env"
-    env.write_text("XAI_API_KEY=secret\nOBSIDIAN_VAULT_PATH=old\n", encoding="utf-8")
+    env.write_text("SOME_SETTING=secret\nOBSIDIAN_VAULT_PATH=old\n", encoding="utf-8")
     env.chmod(0o600)
 
     # The exact shell setup.sh runs, extracted so the test exercises the pipeline
@@ -58,13 +57,6 @@ def test_setup_preserves_the_env_file_mode(tmp_path):
     if os.name != "nt":  # Windows keeps no POSIX owner/group distinction; the umask/chmod pipeline cannot be verified through st_mode there
         mode = stat.S_IMODE(env.stat().st_mode)
         assert mode == 0o600, f"the API-key file ended at {oct(mode)}, readable by others"
-
-
-def test_install_creates_the_env_file_restricted():
-    script = (REPO_ROOT / "install.sh").read_text(encoding="utf-8")
-    assert 'chmod 600 "$ENV_FILE"' in script, (
-        "install.sh no longer restricts the credential file it creates"
-    )
 
 
 # --- SKILL.md vs the command files ------------------------------------------
@@ -168,14 +160,14 @@ def test_readme_command_counts_match_reality():
 
 
 def test_readme_layer_diagram_sums_to_the_real_total():
-    """The four layer boxes are the only place the README breaks the total
+    """The three layer boxes are the only place the README breaks the total
     down, so a new command that lands in a layer without the box being updated
     leaves a diagram that adds up to less than the total printed under it. It
     read 28 + 9 + 1 + 7 = 45 against a real 47."""
     text = README.read_text(encoding="utf-8")
     actual = len(list(COMMANDS.glob("*.md")))
     boxes = [int(n) for n in re.findall(r"LAYER \d: [^(]+\((\d+) commands?\)", text)]
-    assert len(boxes) == 4, f"expected four layer boxes in the diagram, found {len(boxes)}"
+    assert len(boxes) == 3, f"expected three layer boxes in the diagram, found {len(boxes)}"
     assert sum(boxes) == actual, (
         f"the layer diagram sums to {sum(boxes)} ({' + '.join(map(str, boxes))}); "
         f"commands/ holds {actual}"

@@ -22,7 +22,6 @@ SOURCING = (
     "update.sh",
     "scripts/setup.sh",
     "scripts/run-command.sh",
-    "integrations/telegram-journal/setup.sh",
 )
 
 

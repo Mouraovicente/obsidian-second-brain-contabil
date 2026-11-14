@@ -57,7 +57,7 @@ def _collisions() -> list[tuple[str, str, str]]:
 
 def test_commands_declare_triggers():
     trig = _triggers()
-    assert len(trig) >= 40, f"only found triggers in {len(trig)} commands; the scan is broken"
+    assert len(trig) >= 35, f"only found triggers in {len(trig)} commands; the scan is broken"
 
 
 def test_the_precedence_rule_exists():

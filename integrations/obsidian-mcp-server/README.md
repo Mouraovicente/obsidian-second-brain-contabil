@@ -1,6 +1,6 @@
 # Obsidian Second Brain MCP server
 
-An MCP server that turns an Obsidian vault into a set of tools any MCP client can call - [Hermes Agent](https://github.com/NousResearch/hermes-agent) (via `discover_mcp_tools()`), Claude Desktop, Claude Code, or Cursor.
+An MCP server that turns an Obsidian vault into a set of tools any MCP client can call - Claude Desktop, Claude Code, or Cursor.
 
 This is the connector half of [Issue #60](https://github.com/eugeniughelbur/obsidian-second-brain/issues/60): the agent gets a doorway to **use** your vault as a knowledge second brain (search it, read it, add to it) **without** the vault becoming the agent's own behavioral memory. Those stay two distinct things, as requested.
 
@@ -61,7 +61,7 @@ uv run --no-project --with 'mcp<2' python integrations/obsidian-mcp-server/serve
 
 ## Wire it into a client
 
-Hermes Agent and most MCP clients take a launch command. Example client config entry:
+Most MCP clients take a launch command. Example client config entry:
 
 ```json
 {
@@ -75,7 +75,7 @@ Hermes Agent and most MCP clients take a launch command. Example client config e
 }
 ```
 
-For Hermes specifically, add the server to its MCP config; Hermes picks the tools up through `discover_mcp_tools()` with zero Hermes-specific code. The same server works unchanged in Claude Desktop / Claude Code / Cursor.
+The same server works unchanged in Claude Desktop / Claude Code / Cursor.
 
 ## Testing
 
@@ -92,7 +92,6 @@ Live-test checklist:
   - [x] Server starts and an MCP client completes the handshake.
   - [x] Client lists the three tools.
   - [x] Client calls `obsidian_search` (results), `obsidian_read_note` (content), `obsidian_save_note` (writes a valid AI-first note to `Inbox/`). Verified 2026-06-06 via `live_test.py` against both a throwaway vault and a real vault (read-only).
-  - [ ] Connect from a real Hermes instance and confirm the tools appear via `discover_mcp_tools()`.
 
 ## Notes
 

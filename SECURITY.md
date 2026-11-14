@@ -40,7 +40,7 @@ Examples of what we care about: path traversal vulnerabilities in scripts, API k
 
 ## Out of scope
 
-- Bugs in upstream Claude Code, the Anthropic API, Obsidian itself, xAI's API, Perplexity's API, or the YouTube Data API. Report those to the respective vendor.
+- Bugs in upstream Claude Code, the Anthropic API, or Obsidian itself. Report those to the respective vendor.
 - Vulnerabilities that require an attacker to already have full access to the user's machine.
 - Issues in user-supplied vault content (the skill writes notes, but what you put in your vault is your responsibility).
 
