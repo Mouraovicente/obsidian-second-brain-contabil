@@ -152,8 +152,8 @@ def test_readme_command_counts_match_reality():
     actual = len(list(COMMANDS.glob("*.md")))
     # The layer boxes are per-layer subtotals, not the total; they have their
     # own fence below.
-    prose = re.sub(r"LAYER \d: [^(]+\(\d+ commands?\)", "", text)
-    claimed = {int(n) for n in re.findall(r"(\d{2}) commands", prose)}
+    prose = re.sub(r"(?:LAYER|CAMADA) \d: [^(]+\(\d+ (?:commands?|comandos?)\)", "", text)
+    claimed = {int(n) for n in re.findall(r"(\d{2}) (?:commands|comandos)", prose)}
     claimed |= {int(n) for n in re.findall(r"see all (\d{2})", prose)}
     wrong = sorted(c for c in claimed if c not in (actual, actual - 1))
     assert not wrong, f"README claims {wrong} commands; commands/ holds {actual}"
@@ -166,7 +166,8 @@ def test_readme_layer_diagram_sums_to_the_real_total():
     read 28 + 9 + 1 + 7 = 45 against a real 47."""
     text = README.read_text(encoding="utf-8")
     actual = len(list(COMMANDS.glob("*.md")))
-    boxes = [int(n) for n in re.findall(r"LAYER \d: [^(]+\((\d+) commands?\)", text)]
+    boxes = [int(n) for n in re.findall(
+        r"(?:LAYER|CAMADA) \d: [^(]+\((\d+) (?:commands?|comandos?)\)", text)]
     assert len(boxes) == 3, f"expected three layer boxes in the diagram, found {len(boxes)}"
     assert sum(boxes) == actual, (
         f"the layer diagram sums to {sum(boxes)} ({' + '.join(map(str, boxes))}); "

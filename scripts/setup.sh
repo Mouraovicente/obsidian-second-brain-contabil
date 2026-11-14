@@ -10,9 +10,10 @@
 #
 # What it does:
 #   1. Validates the vault path
-#   2. Adds OBSIDIAN_VAULT_PATH to ~/.claude/settings.json
-#   3. Wires the PostCompact background agent hook
-#   4. Makes the hook script executable
+#   2. Adds OBSIDIAN_VAULT_PATH to ~/.claude/settings.json (Python, no jq)
+#   3. Wires the SessionStart, UserPromptSubmit (recall), Stop (save reminder)
+#      and PostCompact (inert) hooks
+#   4. Makes the hook scripts executable
 #   5. Registers slash commands in ~/.claude/commands/
 #   6. Configures the MCP server for Claude Code (optional)
 
@@ -28,6 +29,8 @@ HOOK_SCRIPT="$SKILL_DIR/hooks/obsidian-bg-agent.sh"
 # The .sh wrapper, not the .py: it resolves an interpreter that actually runs
 # before handing over, which the bare `python3` name does not do on Windows (#269).
 SESSION_HOOK="$SKILL_DIR/hooks/load_vault_context.sh"
+RECALL_HOOK="$SKILL_DIR/hooks/obsidian-recall.sh"
+STOP_HOOK="$SKILL_DIR/hooks/obsidian-save-reminder.sh"
 osb_env_file
 ENV_FILE="$OSB_ENV_FILE"
 
@@ -38,11 +41,15 @@ yellow() { printf '\033[0;33m%s\033[0m\n' "$1"; }
 red()    { printf '\033[0;31m%s\033[0m\n' "$1"; }
 step()   { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
-if ! command -v jq >/dev/null 2>&1; then
-  red "Error: jq is required (it edits $SETTINGS safely)."
-  echo "Install it: brew install jq   |   sudo apt install jq   |   https://jqlang.github.io/jq/"
+# Python edits settings.json (no jq needed, which matters on Windows). The
+# resolver runs each candidate, because the bare name python3 is the Microsoft
+# Store stub there (#269).
+. "$SKILL_DIR/scripts/python-interpreter.sh"
+PYTHON=$(osb_python) || {
+  red "Error: no working Python found (tried python3, python, py -3, uv run)."
+  echo "Install Python from python.org or uv from astral.sh, then run this again."
   exit 1
-fi
+}
 
 # ── vault path ───────────────────────────────────────────────────────────────
 
@@ -76,6 +83,7 @@ echo ""
 step "1. Making hook scripts executable..."
 chmod +x "$HOOK_SCRIPT"
 [[ -f "$SESSION_HOOK" ]] && chmod +x "$SESSION_HOOK"
+chmod +x "$RECALL_HOOK" "$STOP_HOOK"
 green "   Done - $HOOK_SCRIPT"
 green "   Done - $SESSION_HOOK"
 
@@ -83,24 +91,13 @@ green "   Done - $SESSION_HOOK"
 
 step "2. Updating $SETTINGS..."
 
-if [[ ! -f "$SETTINGS" ]]; then
-  echo "{}" > "$SETTINGS"
-  echo "   Created $SETTINGS"
-fi
-
-# Validate JSON
-if ! jq empty "$SETTINGS" 2>/dev/null; then
-  red "Error: $SETTINGS contains invalid JSON. Fix it first."
-  exit 1
-fi
-
-# ── add env var ───────────────────────────────────────────────────────────────
-
-jq --arg vault "$VAULT" '
-  .env = (.env // {}) | .env.OBSIDIAN_VAULT_PATH = $vault
-' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
-
-green "   OBSIDIAN_VAULT_PATH set"
+# Sets env.OBSIDIAN_VAULT_PATH and registers the hooks (PostCompact, SessionStart,
+# UserPromptSubmit recall, Stop save reminder). Idempotent; refuses to touch a
+# settings.json that is not valid JSON. PYTHON is unquoted: it may be several words.
+$PYTHON "$SKILL_DIR/scripts/setup_settings.py" \
+  --settings "$SETTINGS" --vault "$VAULT" \
+  --postcompact "$HOOK_SCRIPT" --session "$SESSION_HOOK" \
+  --recall "$RECALL_HOOK" --stop "$STOP_HOOK" || exit 1
 
 # Wire the vault path into the config .env (if one exists) so standalone runs resolve it
 if [ -f "$ENV_FILE" ]; then
@@ -116,81 +113,9 @@ if [ -f "$ENV_FILE" ]; then
   green "   OBSIDIAN_VAULT_PATH written to research .env"
 fi
 
-# ── add PostCompact hook ──────────────────────────────────────────────────────
-
-HOOK_CMD="$HOOK_SCRIPT"
-
-# Check if hook already exists
-EXISTING=$(jq -r '
-  .hooks.PostCompact // [] |
-  .[].hooks // [] |
-  .[].command // ""
-' "$SETTINGS" 2>/dev/null | grep -F "$HOOK_CMD" || true)
-
-if [[ -n "$EXISTING" ]]; then
-  yellow "   PostCompact hook already configured - skipping"
-else
-  jq --arg cmd "$HOOK_CMD" '
-    .hooks = (.hooks // {}) |
-    .hooks.PostCompact = (.hooks.PostCompact // []) + [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": $cmd,
-        "timeout": 10,
-        "async": true
-      }]
-    }]
-  ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
-  green "   PostCompact hook registered (inert by default)"
-  echo "      Background agent is OPT-IN - it writes unattended, so it ships off."
-  echo "      To enable: set OBSIDIAN_BG_AGENT_ENABLED=1 in the env section of"
-  echo "      ~/.claude/settings.json. See hooks/postcompact.hook.example.json."
-fi
-
-# ── add SessionStart hook ────────────────────────────────────────────────────
-
-SESSION_HOOK_CMD="$SESSION_HOOK"
-
-# Matched on the script name, not the whole command: an install made before #269
-# registered `python3 <...>/load_vault_context.py`, and that is exactly the
-# command that silently does nothing on Windows. Finding it means upgrading it,
-# not skipping it and not adding a second entry beside the dead one.
-EXISTING_SESSION=$(jq -r '
-  .hooks.SessionStart // [] |
-  .[].hooks // [] |
-  .[].command // ""
-' "$SETTINGS" 2>/dev/null | grep -F "load_vault_context" || true)
-
-if [[ -n "$EXISTING_SESSION" ]]; then
-  if [[ "$EXISTING_SESSION" == "$SESSION_HOOK_CMD" ]]; then
-    yellow "   SessionStart hook already configured - skipping"
-  else
-    jq --arg cmd "$SESSION_HOOK_CMD" '
-      .hooks.SessionStart = [
-        .hooks.SessionStart[]? |
-        .hooks = [
-          .hooks[]? |
-          if ((.command // "") | contains("load_vault_context"))
-          then .command = $cmd else . end
-        ]
-      ]
-    ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
-    green "   SessionStart hook updated to the interpreter-resolving wrapper"
-  fi
-else
-  jq --arg cmd "$SESSION_HOOK_CMD" '
-    .hooks = (.hooks // {}) |
-    .hooks.SessionStart = (.hooks.SessionStart // []) + [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": $cmd
-      }]
-    }]
-  ' "$SETTINGS" > "$SETTINGS.tmp" && mv "$SETTINGS.tmp" "$SETTINGS"
-  green "   SessionStart hook wired (injects _CLAUDE.md once per session)"
-fi
+echo "      The PostCompact background agent is OPT-IN - it writes unattended, so it ships off."
+echo "      To enable: set OBSIDIAN_BG_AGENT_ENABLED=1 in the env section of"
+echo "      ~/.claude/settings.json. See hooks/postcompact.hook.example.json."
 
 # ── register slash commands ──────────────────────────────────────────────────
 

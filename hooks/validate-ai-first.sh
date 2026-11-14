@@ -53,15 +53,25 @@
 emit_ai_first_warning() {
   local msg="$1"
   printf '%s\n' "$msg" >&2
-  jq -n --arg msg "$msg" '{
-    systemMessage: $msg,
-    decision: "block",
-    reason: $msg,
-    hookSpecificOutput: {
-      hookEventName: "PostToolUse",
-      additionalContext: $msg
-    }
-  }'
+  if command -v jq >/dev/null 2>&1; then
+    jq -n --arg msg "$msg" '{
+      systemMessage: $msg,
+      decision: "block",
+      reason: $msg,
+      hookSpecificOutput: {
+        hookEventName: "PostToolUse",
+        additionalContext: $msg
+      }
+    }'
+  else
+    # No jq (a stock Windows machine): build the same JSON with Python.
+    OSB_MSG="$msg" $(osb_python) -c '
+import json, os
+m = os.environ["OSB_MSG"]
+print(json.dumps({"systemMessage": m, "decision": "block", "reason": m,
+                  "hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": m}}))
+' 2>/dev/null
+  fi
   exit 0
 }
 
@@ -156,15 +166,37 @@ INPUT=$(cat)
 # NotebookEdit: tool_input.notebook_path - an .ipynb, so the .md gate below
 # drops it; it is read here so a notebook write is not mistaken for an unknown
 # payload shape.
-FILE=$(printf '%s' "$INPUT" | jq -r '
-  .tool_input.file_path
-  // .tool_input.filePath
-  // .tool_input.notebook_path
-  // .tool_input.notebookPath
-  // .args.file_path
-  // .args.filePath
-  // ""
-' 2>/dev/null)
+# jq when present; otherwise the same lookups in Python, so the hook is not a
+# silent no-op on a machine without jq (a stock Windows install has none).
+json_file_path() {
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$INPUT" | jq -r '
+      .tool_input.file_path
+      // .tool_input.filePath
+      // .tool_input.notebook_path
+      // .tool_input.notebookPath
+      // .args.file_path
+      // .args.filePath
+      // ""
+    ' 2>/dev/null
+  else
+    printf '%s' "$INPUT" | $(osb_python) -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except ValueError:
+    d = {}
+for scope in ("tool_input", "args"):
+    sub = d.get(scope) if isinstance(d, dict) else None
+    if isinstance(sub, dict):
+        for k in ("file_path", "filePath", "notebook_path", "notebookPath"):
+            if sub.get(k):
+                print(sub[k]); sys.exit(0)
+print("")
+' 2>/dev/null
+  fi
+}
+FILE=$(json_file_path)
 
 # Unparseable input, or input that names no tool, is not a write this hook was
 # asked about: bail silently. A payload that names a tool but carries no path
@@ -173,7 +205,18 @@ FILE=$(printf '%s' "$INPUT" | jq -r '
 # stderr and exit 1 (non-blocking; the write stands) instead of exiting 0 and
 # looking exactly like "not a vault file" (#171).
 if [[ -z "$FILE" ]]; then
-  TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // ""' 2>/dev/null)
+  if command -v jq >/dev/null 2>&1; then
+    TOOL=$(printf '%s' "$INPUT" | jq -r '.tool_name // ""' 2>/dev/null)
+  else
+    TOOL=$(printf '%s' "$INPUT" | $(osb_python) -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except ValueError:
+    d = {}
+print(d.get("tool_name", "") if isinstance(d, dict) else "")
+' 2>/dev/null)
+  fi
   [[ -z "$TOOL" ]] && exit 0
   # Top-level scalar keys count too: a host that puts file_path beside
   # tool_name instead of inside tool_input should see that key named here,

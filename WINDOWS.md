@@ -6,7 +6,7 @@ obsidian-second-brain runs on Windows through Git Bash. Eleven people had report
 
 1. Install [Git for Windows](https://git-scm.com/download/win). It gives you Git Bash, the shell every script here runs in.
 2. Install a real Python 3 from [python.org](https://www.python.org/downloads/windows/), or install [uv](https://docs.astral.sh/uv/). The `python3` command that comes with Windows is a Microsoft Store shortcut that runs nothing. The hooks try `python3`, `python`, `py -3` and `uv run` in that order, so any real install works (#269, #281).
-3. For the classic script install (`scripts/setup.sh`), also install `jq`: `winget install jqlang.jq`.
+3. Nothing else to install for the script install: `scripts/setup.sh` edits `settings.json` with Python and no longer needs `jq`. (The write-time validator hook uses `jq` when it is present and Python when it is not.)
 4. Install [Claude Code](https://claude.com/claude-code), or the agent you use.
 
 ## Install

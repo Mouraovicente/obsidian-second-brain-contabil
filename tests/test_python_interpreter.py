@@ -217,28 +217,27 @@ def test_setup_sh_upgrades_a_hook_registered_before_the_fix(tmp_path):
     text = (REPO_ROOT / "scripts/setup.sh").read_text(encoding="utf-8")
     assert "load_vault_context.sh" in text
     assert 'SESSION_HOOK_CMD="python3 $SESSION_HOOK"' not in text
-    assert "SessionStart hook updated" in text, "no upgrade path for an existing install"
+    assert "SessionStart hook updated" in (
+        REPO_ROOT / "scripts/setup_settings.py").read_text(encoding="utf-8"), \
+        "no upgrade path for an existing install"
 
-    settings = tmp_path / "settings.json"
-    settings.write_text(json.dumps({"hooks": {"SessionStart": [
+    # setup.sh no longer shells out to jq: the same rewrite lives in
+    # scripts/setup_settings.py, exercised on its own here and end to end in
+    # tests/test_setup_settings.py. Rewriting the command in place must keep the
+    # entry and touch nothing else.
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    import setup_settings as ss
+
+    stale = {"hooks": {"SessionStart": [
         {"matcher": "", "hooks": [
             {"type": "command", "command": "python3 /old/path/hooks/load_vault_context.py"}
         ]}
-    ]}}), encoding="utf-8")
-    # The jq program setup.sh uses, applied on its own: rewriting the command in
-    # place must keep the entry and touch nothing else.
-    program = (
-        '.hooks.SessionStart = [ .hooks.SessionStart[]? | .hooks = [ .hooks[]? | '
-        'if ((.command // "") | contains("load_vault_context")) then .command = $cmd else . end ] ]'
-    )
-    out = subprocess.run(
-        ["jq", "--arg", "cmd", "/new/path/hooks/load_vault_context.sh", program, str(settings)],
-        capture_output=True, text=True,
-    )
-    assert out.returncode == 0, out.stderr
-    rewritten = json.loads(out.stdout)["hooks"]["SessionStart"]
+    ]}}
+    out, lines = ss.apply(stale, "/v", "/p.sh", "/new/path/hooks/load_vault_context.sh", "/r.sh", "/s.sh")
+    rewritten = out["hooks"]["SessionStart"]
     assert len(rewritten) == 1 and len(rewritten[0]["hooks"]) == 1
     assert rewritten[0]["hooks"][0]["command"] == "/new/path/hooks/load_vault_context.sh"
+    assert "SessionStart hook updated to the interpreter-resolving wrapper" in lines
 
 
 def _run_install_sh(tmp_path: Path, bin_dir: Path) -> tuple[subprocess.CompletedProcess, Path]:

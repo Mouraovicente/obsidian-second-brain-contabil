@@ -24,5 +24,6 @@ def test_every_command_is_in_skill_and_readme():
 def test_headline_count_matches_filesystem():
     n = len(list((REPO_ROOT / "commands").glob("*.md")))
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    assert f"{n} commands" in readme, f"README does not state the real count ({n})"
-    assert f"## {n} Commands" in readme, "README's command-table heading disagrees"
+    # The README is in Portuguese now ("comandos"); the count itself must still be the real one.
+    assert f"{n} comandos" in readme, f"README does not state the real count ({n})"
+    assert f"## {n} comandos" in readme, "README's command-table heading disagrees"
