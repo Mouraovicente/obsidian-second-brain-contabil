@@ -37,7 +37,7 @@ O que continua: os 38 comandos que trabalham só com os arquivos do cofre, a reg
 
 ## Como funciona a memória
 
-O plugin traz cinco "hooks" (pequenos programas que o Claude Code roda sozinho em certos momentos). Todos ficam em silêncio se a variável `OBSIDIAN_VAULT_PATH` não estiver definida.
+O plugin traz cinco "hooks" (pequenos programas que o Claude Code roda sozinho em certos momentos). Sem a variável `OBSIDIAN_VAULT_PATH`, só o primeiro roda: ele informa ao agente onde a habilidade está instalada e não lê nenhuma nota. Os outros ficam em silêncio.
 
 | Quando | Hook | O que faz |
 |---|---|---|
@@ -64,7 +64,7 @@ Para quem não programa. Faça uma vez só, na ordem.
 3. **Obsidian.** Baixe em [obsidian.md](https://obsidian.md) e instale. Plugins úteis (Configurações, Plugins da comunidade): Dataview, Templater e Kanban.
 4. **O agente.** O aplicativo Claude (aba **Code**) ou o Codex no aplicativo ChatGPT.
 
-Depois, escolha um dos dois caminhos.
+Depois, escolha um dos dois caminhos. Não use os dois no mesmo computador: os hooks ficariam registrados duas vezes e o lembrete contaria cada resposta em dobro.
 
 ### Caminho A: plugin do Claude Code
 

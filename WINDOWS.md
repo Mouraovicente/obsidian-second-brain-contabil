@@ -21,7 +21,7 @@ On Windows the slash commands are copied, not linked. After every `git pull`, ru
 
 ## Where your settings live
 
-The config file is `%USERPROFILE%\.config\obsidian-second-brain\.env`. Python, Claude Code and the scripts all look there, even when a company setup points `HOME` at another drive (#242). To keep it somewhere else, set `OBSIDIAN_ENV_FILE` to a native path such as `C:/Users/you/osb.env`. The README has the [exact commands](README.md#research-toolkit-optional).
+The config file is `%USERPROFILE%\.config\obsidian-second-brain\.env`. Python, Claude Code and the scripts all look there, even when a company setup points `HOME` at another drive (#242). To keep it somewhere else, set `OBSIDIAN_ENV_FILE` to a native path such as `C:/Users/you/osb.env`.
 
 ## Text encoding
 
