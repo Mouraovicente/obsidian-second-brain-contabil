@@ -389,6 +389,7 @@ Pick your role at bootstrap. Each preset creates tailored folder structures, tem
 | **builder** | Developers, engineers, architects | Backlog / Sprint / Done |
 | **creator** | Writers, marketers | Ideas / Drafts / Published |
 | **researcher** | Academics, analysts, deep-divers | Reading / Processing / Synthesized |
+| **contabil** | Accounting offices (notes in Brazilian Portuguese) | A fazer / Em andamento / Aguardando / Feito |
 
 ```bash
 uv run python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset builder
@@ -619,7 +620,7 @@ Yes. The repo ships a build script that compiles the platform-neutral source int
 Yes. The skill writes to your vault as standard markdown files. Obsidian Sync, iCloud, Syncthing, and Git-based sync all work without modification.
 
 ### Can I use it in a language other than English?
-Yes: talk to your agent in your own language and keep the vault in English. The agent translates what you say before it writes a note, replies in your language, and searches with English queries. This passes every vault rule, and search quality is measured on English notes, so you stay on the tested path. Put the rule in `<vault>/.claude/CLAUDE.md`, not `_CLAUDE.md`, so an `/obsidian-init` re-run keeps it. [andreanovix](https://github.com/andreanovix) shared a working block in [discussion #307](https://github.com/eugeniughelbur/obsidian-second-brain/discussions/307). Notes in Chinese, Japanese or Korean, command phrases in five languages, and encoding: see [LANGUAGES.md](LANGUAGES.md).
+Yes. For the `contabil` preset the default is notes in Brazilian Portuguese: the vault's `_CLAUDE.md` declares the language and the agent writes in it without translating. For any other vault, you can still keep the vault in English: talk to your agent in your own language, and the agent translates what you say before it writes a note, replies in your language, and searches with English queries (the tested path, since search quality is measured on English notes). Put that rule in `<vault>/.claude/CLAUDE.md`, not `_CLAUDE.md`, so an `/obsidian-init` re-run keeps it. Notes in Chinese, Japanese or Korean, command phrases in five languages, and encoding: see [LANGUAGES.md](LANGUAGES.md).
 
 ### Do I need API keys to use this?
 No. None of the 38 commands needs an API key, and the scripts make no network calls by default. The one optional exception is semantic search: the default backend is Ollama on your own machine, and the `openai` backend sends note text to whatever endpoint you configure.

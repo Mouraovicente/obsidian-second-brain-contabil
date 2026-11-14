@@ -55,6 +55,8 @@ Use the obsidian-second-brain skill. Execute `/obsidian-init`:
    - If the selected First-Brain variant has eligible sources, suggest `/obsidian-ingest First-Brain/ --preview` followed by explicit directory ingestion. Use only permitted path metadata to identify candidates, including supported PDFs, audio, and images. Do not launch ingestion or read private bodies to make the suggestion.
 
 If `_CLAUDE.md` already exists: show a diff of what would change and ask before overwriting.
+
+Never create, edit, or overwrite `AGENTS.md` or `CLAUDE.md` at the vault root: those belong to the user. If either exists, read it before step 4, follow it, and add a line to the generated `_CLAUDE.md` telling the agent to read and obey it. The only CLAUDE.md this command writes is `.claude/CLAUDE.md` (step 10).
 If `index.md` already exists: regenerate it (it's always a fresh catalog of current vault state).
 If a monolithic `log.md` already exists with `## YYYY-MM-DD` sections: run `uv run --directory "SKILL_ROOT" scripts/migrate_log.py --vault <vault-path>` (its absolute path was given at session start as **Skill root**; substitute it for `SKILL_ROOT`) to split it into `Logs/YYYY-MM-DD.md` files. Do not overwrite manually.
 

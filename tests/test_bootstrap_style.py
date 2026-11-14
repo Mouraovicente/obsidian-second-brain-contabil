@@ -132,10 +132,13 @@ def test_every_style_passes_its_own_inspection(tmp_path, preset, style):
     assert [p for p in listed if not _exists_exact(vault, p.rstrip("/"))] == []
     # Only the people route is checked: the executive, creator and researcher
     # manuals already sent dev work to a Dev Logs/ they never create, before #283.
+    # The contabil manual is in Portuguese and has no people folder (clients are
+    # the entities), so it carries no such route; its folder map is checked above.
     people_route = re.search(r"New people mentioned → ([^ ]+)/", claude_md)
-    assert people_route and _exists_exact(vault, people_route.group(1)), (
-        "_CLAUDE.md routes new people to a folder the vault does not have"
-    )
+    if preset != "contabil":
+        assert people_route and _exists_exact(vault, people_route.group(1)), (
+            "_CLAUDE.md routes new people to a folder the vault does not have"
+        )
 
 
 @pytest.mark.parametrize("style", bv.STYLES)

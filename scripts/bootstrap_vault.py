@@ -26,7 +26,7 @@ Usage:
 Options:
     --path        Path where the vault should be created (required)
     --name        Your full name (required)
-    --preset      Vault preset: default | executive | builder | creator | researcher
+    --preset      Vault preset: default | executive | builder | creator | researcher | contabil
                   (default: "default" - Life OS layout)
     --mode        Operating mode: personal | assistant (default: personal)
     --subject     Subject name (required when --mode=assistant)
@@ -267,6 +267,25 @@ PRESETS = {
         ],
         "boards": [Board("Research", ["📚 Reading", "🔬 Processing", "🧬 Synthesized", "✅ Done"])],
         "kanban_columns": ["📚 Reading", "🔬 Processing", "🧬 Synthesized", "✅ Done"],
+    },
+    # pt-BR preset for accounting offices. Only the CONTENT folders are
+    # translated (Clientes, Processos, Legislação, Decisões, Fontes). The system
+    # folders keep their English names on purpose, because code depends on
+    # them: vault_health, vault_scan, link_graph, export_okf, heal_links and the
+    # MCP server skip a folder named `templates` case-insensitively (a `Modelos/`
+    # folder would be scanned as notes), the validator hook skips `Boards/` (a
+    # kanban board must not carry a "For future agent" H2), and the Base files
+    # and /obsidian-daily read `Daily/`. Commands resolve every other folder
+    # through the `## Folder Map` of the vault's _CLAUDE.md (references/
+    # folder-map.md), which this preset writes in Portuguese.
+    "contabil": {
+        "purpose": "Escritório de contabilidade: clientes, processos, legislação, decisões e fontes",
+        "folders": [
+            "Clientes", "Processos", "Legislação", "Decisões", "Fontes",
+            "Daily", "Boards", "Templates", "_trash",
+        ],
+        "boards": [Board("Rotina", ["A fazer", "Em andamento", "Aguardando", "Feito"])],
+        "kanban_columns": ["A fazer", "Em andamento", "Aguardando", "Feito"],
     },
 }
 
@@ -1368,6 +1387,356 @@ SORT date DESC
         return
 
 
+# ── Preset contabil (pt-BR) ───────────────────────────────────────────────────
+
+CONTABIL_DESCRIPTIONS = {
+    "Clientes": "Uma nota por cliente: como o escritório atende (nome do arquivo = apelido interno)",
+    "Processos": "Uma nota por rotina, em passos numerados",
+    "Legislação": "Uma nota por mudança de norma, com vigência e link da fonte oficial",
+    "Decisões": "Uma nota por decisão importante",
+    "Fontes": "Resumo e link de cada fonte consultada",
+    "Daily": "Uma nota por dia, nome `AAAA-MM-DD.md` (nome de sistema, não se traduz)",
+    "Boards": "Quadros kanban (nome de sistema, não se traduz)",
+    "Templates": "Modelos de nota (nome de sistema, não se traduz)",
+    "_trash": "Notas descartadas",
+}
+
+
+def claude_md_contabil(name: str, preset: dict, folders: list, vault_path: Path,
+                       style: str = "obsidian") -> str:
+    rows = "\n".join(
+        f"| `{path}/` | {CONTABIL_DESCRIPTIONS.get(origin.split('/')[0], '-')} |"
+        for path, origin in folders
+    )
+    boards = resolve_folder("Boards", style)
+    daily = resolve_folder("Daily", style)
+    return f"""# Manual de operação do agente - Cofre de {name}
+
+> Leia este arquivo antes de fazer qualquer coisa neste cofre.
+> Se o cofre tiver um `AGENTS.md` ou um `CLAUDE.md` do próprio escritório, leia e siga esses arquivos também. Eles valem mais que este manual quando houver conflito. Nunca os sobrescreva, nem este manual nem os do escritório, sem o usuário pedir.
+
+---
+
+## Identidade do cofre
+
+- **Dono:** {name}
+- **Preset:** contabil
+- **Vault style:** {style}
+- **Finalidade:** {preset["purpose"]}
+- **Idioma das notas:** português do Brasil
+- **Atualizado em:** {TODAY}
+
+---
+
+## Idioma
+
+- Escreva todas as notas em português do Brasil. Não traduza para o inglês antes de gravar.
+- As chaves do frontmatter (`date`, `type`, `tags`, `ai-first: true`) e o título `## For future agent` ficam exatamente assim, porque o validador procura por eles. O conteúdo dessas seções é em português.
+- Português claro, frases completas, sem jargão desnecessário, sem emoji.
+- Se faltar informação, pergunte antes de gravar. Nunca invente. Se não achar no cofre ou nas fontes que o usuário deu, diga "não encontrei".
+
+---
+
+## Mapa de pastas
+
+| Pasta | O que guarda |
+|---|---|
+{rows}
+
+As pastas de conteúdo estão em português. Os nomes `Daily`, `Boards`, `Templates` e `_trash` ficam em inglês de propósito: ferramentas do plugin (validador, saúde do cofre, busca, exportação) procuram exatamente esses nomes e deixariam de reconhecê-los se fossem traduzidos.
+
+Captura rápida sem lugar certo: pergunte ao usuário em qual pasta a nota vai.
+
+Nomes de arquivo: sem `/ \\ : * ? " < > |`. Cliente pelo apelido interno. O CNPJ pode ir dentro da nota, nunca no nome do arquivo.
+
+---
+
+## Arquivos principais
+
+- **Painel:** `Home.md`
+- **Quadro de rotina:** `{boards}/Rotina.md` (colunas: A fazer, Em andamento, Aguardando, Feito). Onde um comando falar em Backlog, use "A fazer"; onde falar em Done, use "Feito".
+- **Notas do dia:** `{daily}/AAAA-MM-DD.md`
+
+---
+
+## O que nunca gravar
+
+Segredos de acesso: senhas, tokens, chaves de API, códigos de verificação em duas etapas, certificados digitais (.pfx, .p12) e as senhas deles. Se o usuário colar um desses, não grave. Avise e proponha a nota sem o segredo.
+
+Dados de clientes (CPF, CNPJ, folha, extratos, documentos fiscais) podem ser registrados quando servirem ao trabalho, porque o cofre é pessoal e a pessoa decide. Se a política de uso do escritório for mais restrita, siga a política do escritório.
+
+---
+
+## Fonte e nível de confiança
+
+Toda afirmação relevante leva fonte e um nível de confiança no campo `confianca` ou ao lado da frase:
+
+- **fato:** está em fonte oficial ou em documento do escritório. Cite nome, número, data e link. Sem fonte, não é fato.
+- **interpretacao:** leitura de alguém do escritório. Diga de quem e a data.
+- **hipotese:** não confirmada. Diga o que falta para confirmar.
+
+Nunca apresente interpretação ou hipótese como fato.
+
+Legislação: sempre a data de vigência e o link da fonte oficial. Sem link oficial, grave como hipótese.
+
+Datas: o que pode mudar em poucos dias leva carimbo `(em AAAA-MM-DD, fonte)` ou fica dentro de nota datada, conforme `references/freshness-policy.md`. Quando uma nota substitui outra (decisão revista, norma revogada), use `supersedes` e `superseded_by` em vez de apagar a antiga.
+
+---
+
+## Como gravar
+
+- Procure antes se já existe nota sobre o assunto. Atualize em vez de duplicar, registrando a data da mudança.
+- Nunca apague nem sobrescreva uma nota inteira sem o usuário confirmar.
+- Só mexa em arquivos dentro do cofre.
+- Toda nota nova usa o modelo da pasta, em `Templates/`.
+
+Salvar sem perguntar: decisão tomada na conversa, combinado com cliente, passo de processo, mudança de norma com fonte. Perguntar antes: qualquer coisa que apague ou arquive nota existente, e dado sensível de cliente.
+
+---
+
+## Como responder consultas
+
+- Procure primeiro no cofre.
+- Liste as notas usadas e o nível de confiança de cada afirmação.
+- Se duas notas se contradizem, mostre as duas e pergunte qual vale.
+- Para lei, confira a vigência antes de responder.
+
+---
+
+## Revisão semanal
+
+Quando o usuário pedir (`/obsidian-review`): notas criadas ou alteradas na semana, notas sem fonte, interpretações que podem virar fato, hipóteses antigas, links quebrados, duplicidade e segredos gravados por engano. Proponha, não aplique.
+
+---
+
+*Gerado pelo script de bootstrap do obsidian-second-brain (preset: contabil).*
+"""
+
+
+def render_home_contabil(name: str, preset: dict, style: str = "obsidian") -> str:
+    # Folders in a plain list on purpose: a [[Pasta]] link makes Obsidian create
+    # an empty note when clicked.
+    skip = {"Boards", "Templates", "_trash", "Daily"}
+    folder_lines = "\n".join(
+        f"- {f}" for f in preset["folders"] if f not in skip
+    )
+    content_sources = " OR ".join(
+        f'"{resolve_folder(f, style)}"' for f in preset["folders"] if f not in skip
+    )
+    boards = resolve_folder("Boards", style)
+    return f"""---
+date: {TODAY}
+tags:
+  - home
+aliases:
+  - Painel
+---
+
+# Cofre contábil de {name}
+
+## Pastas
+
+{folder_lines}
+
+## Quadro
+
+- [[{boards}/Rotina|Rotina]]
+
+## Para revisar esta semana
+
+```dataview
+TABLE WITHOUT ID file.link AS "Nota", file.mtime AS "Alterada em"
+FROM {content_sources}
+WHERE file.mtime >= date(today) - dur(7 days)
+SORT file.mtime DESC
+```
+"""
+
+
+def write_contabil_templates(vault: Path, style: str = "obsidian") -> None:
+    put = _writer(vault, style)
+    put("Templates/Cliente.md", """---
+date: <% tp.date.now("YYYY-MM-DD") %>
+type: cliente
+tags:
+  - cliente
+ai-first: true
+cliente:
+autor:
+criado_em: <% tp.date.now("YYYY-MM-DD") %>
+revisado_em: <% tp.date.now("YYYY-MM-DD") %>
+fonte:
+confianca: fato
+---
+
+# <% tp.file.title %>
+
+## For future agent
+
+Ficha de cliente do escritório. Reúne como atendemos, dados cadastrais, particularidades, combinados e pendências. Consulte esta nota antes de qualquer trabalho para este cliente. Cada item traz nível de confiança (fato, interpretação ou hipótese) e fonte.
+
+## Como atendemos
+
+Resumo: regime, rotina, contato interno, canal preferido.
+
+## Dados do cliente
+
+Razão social, CNPJ, regime e o que mais fizer falta.
+
+## Particularidades
+
+- (item) [fato | interpretação | hipótese] [fonte]
+
+## Combinados e prazos internos
+
+- (item) [nível] [fonte]
+
+## Histórico de decisões
+
+- AAAA-MM-DD: (decisão). Ver [[nota da decisão]]
+
+## Pendências
+
+- [ ] (item)
+""")
+    put("Templates/Processo.md", """---
+date: <% tp.date.now("YYYY-MM-DD") %>
+type: processo
+tags:
+  - processo
+ai-first: true
+nome:
+autor:
+criado_em: <% tp.date.now("YYYY-MM-DD") %>
+revisado_em: <% tp.date.now("YYYY-MM-DD") %>
+fonte:
+confianca: fato
+---
+
+# <% tp.file.title %>
+
+## For future agent
+
+Rotina do escritório descrita em passos numerados. Consulte esta nota para saber como uma tarefa é feita, quando, e quem decide em caso de dúvida. Passos que vêm de norma citam a fonte.
+
+## Quando se faz
+
+## Passos
+
+1. (passo) [fonte, se vier de norma]
+
+## Pontos de atenção
+
+## Quem decide quando há dúvida
+
+Papel, não nome de pessoa.
+
+## Normas ligadas
+
+- [[nota da norma]]
+""")
+    put("Templates/Mudança de lei.md", """---
+date: <% tp.date.now("YYYY-MM-DD") %>
+type: legislacao
+tags:
+  - legislacao
+ai-first: true
+norma:
+publicada_em:
+vigencia_a_partir_de:
+fonte_oficial:
+autor:
+criado_em: <% tp.date.now("YYYY-MM-DD") %>
+revisado_em: <% tp.date.now("YYYY-MM-DD") %>
+confianca: fato
+---
+
+# <% tp.file.title %>
+
+## For future agent
+
+Mudança de norma, com data de vigência e link da fonte oficial. O que a norma diz fica separado da interpretação do escritório. Sem link oficial, a confiança é hipótese. Confira a vigência antes de responder com base nesta nota.
+
+## O que mudou
+
+O que a norma diz, sem interpretação.
+
+## Quem é afetado
+
+Clientes ou rotinas, pelo apelido.
+
+## Interpretação do escritório
+
+De quem, data e nível de confiança.
+
+## O que fazer e até quando
+
+## Processos e clientes ligados
+
+- [[nota ligada]]
+""")
+    put("Templates/Decisão.md", """---
+date: <% tp.date.now("YYYY-MM-DD") %>
+type: decisao
+tags:
+  - decisao
+ai-first: true
+assunto:
+decidido_em: <% tp.date.now("YYYY-MM-DD") %>
+decidido_por:
+autor:
+fonte:
+confianca: fato
+---
+
+# <% tp.file.title %>
+
+## For future agent
+
+Registro de uma decisão importante do escritório: contexto, alternativas e motivo. Consulte esta nota para saber o que foi decidido, por quem e quando revisar. Se uma decisão nova substituir esta, use `superseded_by`.
+
+## Contexto
+
+## Alternativas consideradas
+
+## O que foi decidido e por quê
+
+## Quando revisar
+
+Data ou gatilho.
+
+## Notas ligadas
+
+- [[nota ligada]]
+""")
+    put("Templates/Fonte.md", """---
+date: <% tp.date.now("YYYY-MM-DD") %>
+type: fonte
+tags:
+  - fonte
+ai-first: true
+titulo:
+link:
+consultada_em: <% tp.date.now("YYYY-MM-DD") %>
+confianca: fato
+---
+
+# <% tp.file.title %>
+
+## For future agent
+
+Fonte consultada (norma, manual, parecer, site oficial). Guarda título, link, data da consulta e um resumo curto. Consulte esta nota antes de citar a fonte numa resposta.
+
+## Resumo
+
+## Pontos que interessam ao escritório
+
+## Notas que usam esta fonte
+
+- [[nota ligada]]
+""")
+
+
 def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
               jobs: list, include_sidebiz: bool, style: str = "obsidian"):
     preset = PRESETS[preset_key]
@@ -1395,7 +1764,10 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
     print("📁 Folders created")
 
     # ── _CLAUDE.md ────────────────────────────────────────────────────────────
-    if mode == "assistant":
+    if preset_key == "contabil":
+        write(vault / "_CLAUDE.md",
+              claude_md_contabil(name, preset, folder_pairs, vault, style=style))
+    elif mode == "assistant":
         write(vault / "_CLAUDE.md",
               claude_md_assistant(name, subject, preset_key, preset, vault, folders=folder_pairs, style=style))
     else:
@@ -1417,7 +1789,10 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
           "@../_CLAUDE.md\n")
 
     # ── Home ──────────────────────────────────────────────────────────────────
-    write(vault / "Home.md", render_home(name, preset_key, preset, jobs, mode, subject, style=style))
+    if preset_key == "contabil":
+        write(vault / "Home.md", render_home_contabil(name, preset, style=style))
+    else:
+        write(vault / "Home.md", render_home(name, preset_key, preset, jobs, mode, subject, style=style))
 
     # ── Kanban Boards ─────────────────────────────────────────────────────────
     boards = vault / resolve_folder("Boards", style)
@@ -1430,8 +1805,11 @@ def bootstrap(vault: Path, name: str, preset_key: str, mode: str, subject: str,
             write(boards / f"{board_name}.md", render_kanban(columns))
 
     # ── Templates ─────────────────────────────────────────────────────────────
-    write_core_templates(vault, style)
-    write_preset_extras(vault, preset_key, style)
+    if preset_key == "contabil":
+        write_contabil_templates(vault, style)
+    else:
+        write_core_templates(vault, style)
+        write_preset_extras(vault, preset_key, style)
 
     # ── Bases ─────────────────────────────────────────────────────────────────
     write_bases(vault, style=style, preset_folders=folders)
@@ -1498,6 +1876,8 @@ def main():
 
     if args.mode == "assistant" and not args.subject:
         parser.error("--subject is required when --mode=assistant")
+    if args.preset == "contabil" and args.mode == "assistant":
+        parser.error("the contabil preset is personal-mode only")
 
     vault = Path(args.path).expanduser().resolve()
     if vault.exists() and any(vault.iterdir()):

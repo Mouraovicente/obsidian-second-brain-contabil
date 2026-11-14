@@ -81,6 +81,31 @@ _CJK_RE = re.compile(
 )
 
 
+# Accent folding for lexical search: "legislacao" must find "Legislação" and
+# the reverse, since an office types both spellings. NFKD + drop the combining
+# diacritics (U+0300-036F) + casefold, applied to Latin-style text only. CJK,
+# kana and hangul runs are left alone: NFKD would split hangul syllables into
+# jamo and strip the kana voiced-sound marks (が -> か), breaking the bigram
+# terms above. Applied to the query, note text, and note titles alike, so both
+# sides always agree.
+_COMBINING_RE = re.compile("[\u0300-\u036f]")
+_NON_CJK_RE = re.compile(
+    r"[^\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af\uff66-\uff9d"
+    r"\u1100-\u11ff\u3130-\u318f]+"
+)
+
+
+def _fold_segment(m: "re.Match[str]") -> str:
+    return _COMBINING_RE.sub("", unicodedata.normalize("NFKD", m.group(0))).casefold()
+
+
+def _fold(s: str) -> str:
+    """Lowercase + accent-insensitive form of `s` (see the note above)."""
+    if s.isascii():
+        return s.lower()
+    return _NON_CJK_RE.sub(_fold_segment, s)
+
+
 def _query_terms(query: str, *, drop_stopwords: bool = True) -> List[str]:
     """Split a query into search terms, CJK-aware.
 
@@ -89,7 +114,7 @@ def _query_terms(query: str, *, drop_stopwords: bool = True) -> List[str]:
     (`知識管理` -> 知識, 識管, 管理), with a lone character kept as a unigram, so a
     2-char word like 系統 survives and a reordered phrase still overlaps. Order is
     preserved and duplicates removed so scoring is stable."""
-    q = query.lower()
+    q = _fold(query)
     terms: List[str] = []
     for run in _CJK_RE.findall(q):
         if len(run) == 1:
@@ -447,7 +472,7 @@ def _scan_entry(md: Path, vault: Path):
     text = _read_safe(md, limit=_MAX_FILE_BYTES)
     if not text:
         return None
-    low = text.lower()
+    low = _fold(text)
     rel = md.relative_to(vault).as_posix()
     weight = 1.0
     if rel in _SEARCH_DEWEIGHT_FILES or rel.startswith(_SEARCH_DEWEIGHT_PREFIXES):
@@ -457,7 +482,7 @@ def _scan_entry(md: Path, vault: Path):
     sm = _STATUS_RE.search(text[:400])
     if sm and sm.group(1).lower() in _STALE_STATUSES:
         weight *= _STATUS_FADE
-    entry = (low, md.stem.lower(), 1.0 + math.log1p(len(low) / 1000.0), weight,
+    entry = (low, _fold(md.stem), 1.0 + math.log1p(len(low) / 1000.0), weight,
              _note_age_days(text, md), text)
 
     if hit is not None:
@@ -1557,7 +1582,12 @@ def _parse_command(md: Path):
 
 
 def _snippet(text: str, terms: List[str]) -> str:
-    low = text.lower()
+    # Folding can change the length of a few characters (ligatures, "ß"), which
+    # would misplace the window; fall back to the unfolded text when it does.
+    low = _fold(text)
+    if len(low) != len(text):
+        low = text.lower()
+        terms = [t.lower() for t in terms]
     pos = min((low.find(t) for t in terms if low.find(t) >= 0), default=-1)
     if pos < 0:
         return text.strip()[:_SNIPPET_CHARS]

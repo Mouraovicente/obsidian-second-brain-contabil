@@ -75,6 +75,7 @@ python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset 
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset builder
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset creator
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset researcher
+python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --preset contabil
 
 # Wiki-style layout (wiki/daily/, wiki/entities/, ...) instead of the default Obsidian-style one:
 python scripts/bootstrap_vault.py --path ~/my-vault --name "Your Name" --style wiki
@@ -90,6 +91,7 @@ Then just point the skill at the new vault path (Method A above). If you use the
 - **`builder`** - Projects, dev logs, architecture decisions, debugging. Kanban: Backlog, Sprint, Done.
 - **`creator`** - Content calendar, ideas pipeline, audience notes, publishing. Kanban: Ideas, Drafts, Published.
 - **`researcher`** - Sources, literature notes, hypotheses, methodology. Kanban: Reading, Processing, Synthesized.
+- **`contabil`** - Brazilian Portuguese preset for accounting offices: `Clientes/`, `Processos/`, `Legislação/`, `Decisões/`, `Fontes/` plus the system folders `Daily/`, `Boards/`, `Templates/`, `_trash/` (kept in English because tools look for those names). Personal mode only. Its `_CLAUDE.md` is in Portuguese and tells the agent to read and obey the office's own `AGENTS.md` / `CLAUDE.md` if present. Bootstrap never overwrites existing files.
 
 Default (no preset) gives a general-purpose vault. All presets use wiki-style by default.
 
@@ -247,6 +249,8 @@ See the anti-fabrication and search-completeness hard rules in `references/ai-fi
 Read existing notes in the same folder before writing new ones.
 Match: frontmatter schema, heading style, list formatting, tone, emoji usage (or lack of it).
 Never introduce new conventions - extend what's already there.
+
+**Language.** Write note bodies in the language the vault's `_CLAUDE.md` declares (Brazilian Portuguese for the `contabil` preset). Never translate to English when the vault declares another language. Machine literals stay exactly as they are: frontmatter keys, `ai-first: true`, the `## For future agent` heading, and the file names the commands depend on. When `_CLAUDE.md` declares no language, follow the language of the existing notes.
 
 ### Frontmatter is mandatory
 Every note gets frontmatter. At minimum:

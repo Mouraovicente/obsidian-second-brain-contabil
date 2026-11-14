@@ -2,9 +2,13 @@
 
 Fourteen people had reported problems with non-English text by November 2026, and the code fixes are merged. This page says what works today and which setup stays on the tested path.
 
-## The tested path: talk in your language, keep the vault in English
+## Notes in Brazilian Portuguese (the `contabil` preset)
 
-Talk to your agent in your own language. The agent translates before it writes a note, replies in your language, and searches with English queries. Search quality is measured on English notes, so this path is the one we test.
+Vaults built with `--preset contabil` declare Portuguese in their `_CLAUDE.md`. The agent writes note bodies in Portuguese and does not translate them to English. Machine literals stay as they are: frontmatter keys, `ai-first: true`, the `## For future agent` heading. Search ignores accents, so "legislacao" finds "Legislação" and the other way around.
+
+## The other path: talk in your language, keep the vault in English
+
+For a vault that does not declare a language, you can still talk to your agent in your own language and keep the notes in English. The agent translates before it writes a note, replies in your language, and searches with English queries. Search quality is measured on English notes, so this is the most tested path outside the `contabil` preset.
 
 Put the rule in `<vault>/.claude/CLAUDE.md`, not `_CLAUDE.md`, so an `/obsidian-init` re-run keeps it. [andreanovix](https://github.com/andreanovix) shared a working block in [discussion #307](https://github.com/eugeniughelbur/obsidian-second-brain/discussions/307).
 
