@@ -77,18 +77,10 @@ def _run(tmp_path, settings_text=None, path_override=None):
 
 
 def test_setup_sh_works_without_jq_and_is_idempotent(tmp_path):
-    # A PATH that has bash tools and Python but no jq: a dir of symlinks to what the script needs.
-    bindir = tmp_path / "bin"
-    bindir.mkdir()
-    for tool in ("bash", "sh", "dirname", "cat", "mkdir", "chmod", "mv", "rm", "ln", "awk",
-                 "sed", "grep", "uname", "tr", "head", "env", "id", "basename", "cygpath"):
-        found = shutil.which(tool)
-        if found:
-            (bindir / tool).symlink_to(found)
-    (bindir / "python3").symlink_to(sys.executable)
-    r, settings_path, vault = _run(tmp_path, path_override=str(bindir))
+    bindir = _no_jq_path(tmp_path, ("ln", "id"))
+    r, settings_path, vault = _run(tmp_path, path_override=bindir)
     assert r.returncode == 0, r.stdout[-1500:] + r.stderr[-1500:]
-    assert shutil.which("jq", path=str(bindir)) is None
+    assert shutil.which("jq", path=bindir) is None
     s = json.loads(settings_path.read_text(encoding="utf-8"))
     assert s["env"]["OBSIDIAN_VAULT_PATH"] == str(vault)
     for event in ("SessionStart", "UserPromptSubmit", "Stop", "PostCompact"):
@@ -130,12 +122,25 @@ def test_script_has_a_cli(name):
 
 # ── the write validator without jq ───────────────────────────────────────────
 
-def _no_jq_path(tmp_path):
+def _no_jq_path(tmp_path, extra=()):
+    """A PATH with bash tools and Python but no jq.
+
+    POSIX: a dir of symlinks to what the scripts need. Windows: symlinks need
+    Developer Mode and an extensionless `python3` link is not runnable, so keep
+    the real PATH minus every directory that holds jq, with Python's dir first."""
+    if os.name == "nt":
+        dirs = [str(Path(sys.executable).parent)] + [
+            d for d in os.environ.get("PATH", "").split(os.pathsep)
+            if d and not (Path(d) / "jq.exe").exists() and not (Path(d) / "jq").exists()
+        ]
+        path = os.pathsep.join(dirs)
+        assert shutil.which("jq", path=path) is None
+        return path
     bindir = tmp_path / "nojq"
-    bindir.mkdir()
+    bindir.mkdir(exist_ok=True)
     for tool in ("bash", "sh", "dirname", "cat", "mkdir", "chmod", "mv", "rm", "awk", "sed",
                  "grep", "uname", "tr", "head", "env", "basename", "od", "mktemp", "tail",
-                 "cygpath"):
+                 "cygpath", *extra):
         found = shutil.which(tool)
         if found:
             (bindir / tool).symlink_to(found)
