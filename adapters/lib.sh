@@ -518,6 +518,6 @@ append_owner_credit() {
   owner="$(owner_of "$platform")"
   [[ -n "$owner" ]] || return 0
   [[ -f "$dst/INSTALL.md" ]] || return 0
-  printf '\n---\n\nThis build is maintained by %s. Issues specific to this platform are theirs to triage: https://github.com/eugeniughelbur/obsidian-second-brain/issues\n' \
+  printf '\n---\n\nThis build is maintained by %s. Issues specific to this platform are theirs to triage: https://github.com/Mouraovicente/obsidian-second-brain-contabil/issues\n' \
     "$owner" >> "$dst/INSTALL.md"
 }

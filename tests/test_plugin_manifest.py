@@ -59,7 +59,7 @@ def test_marketplace_metadata_version_matches_pyproject():
 def test_marketplace_catalog_agrees_with_plugin_manifest():
     plugin = _load(".claude-plugin/plugin.json")
     market = _load(".claude-plugin/marketplace.json")
-    assert market["name"] == "obsidian-second-brain"
+    assert market["name"] == "obsidian-second-brain-contabil"
     entries = market["plugins"]
     assert len(entries) == 1
     entry = entries[0]

@@ -36,4 +36,4 @@ This works. Moving a note inside a synced folder is safe since #343 (#324).
 - **"no working Python found (tried python3, python, py -3, uv run)"**: install Python from python.org or uv, then restart Claude Code.
 - **A slash command is missing after an update**: run `bash update.sh`, then restart.
 - **A research command saved its note, but the daily note did not change**: see [Text encoding](#text-encoding).
-- **Something else**: open a [bug report](https://github.com/eugeniughelbur/obsidian-second-brain/issues/new?template=bug_report.yml) and pick Windows as the operating system.
+- **Something else**: open a [bug report](https://github.com/Mouraovicente/obsidian-second-brain-contabil/issues/new?template=bug_report.yml) and pick Windows as the operating system.

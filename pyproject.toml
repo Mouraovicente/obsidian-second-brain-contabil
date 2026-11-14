@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/eugeniughelbur/obsidian-second-brain"
+Homepage = "https://github.com/Mouraovicente/obsidian-second-brain-contabil"
 Author = "https://github.com/eugeniughelbur"
 Blog = "https://theaioperator.io"
 

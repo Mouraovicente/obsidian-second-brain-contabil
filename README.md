@@ -21,9 +21,9 @@
 <p align="center">
   <a href="#quick-start"><img src="https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=anthropic&logoColor=white" alt="Claude Code plugin" /></a>
   <a href="#codex-cli--opencode"><img src="https://img.shields.io/badge/also-Codex_%C2%B7_OpenCode-555" alt="Also runs in Codex and OpenCode" /></a>
-  <img src="https://img.shields.io/github/v/release/eugeniughelbur/obsidian-second-brain?color=green" alt="Release" />
+  <img src="https://img.shields.io/github/v/release/Mouraovicente/obsidian-second-brain-contabil?color=green" alt="Release" />
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT" />
-  <img src="https://img.shields.io/github/stars/eugeniughelbur/obsidian-second-brain?color=yellow" alt="Stars" />
+  <img src="https://img.shields.io/github/stars/Mouraovicente/obsidian-second-brain-contabil?color=yellow" alt="Stars" />
 </p>
 
 **Claude forgets you when a chat ends. Your Obsidian vault doesn't.** This skill connects the two, so every chat adds to one set of linked notes that the next chat reads.
@@ -41,8 +41,8 @@ Your notes stay as Markdown files on your computer. No command needs an API key,
 Inside any Claude Code session, run:
 
 ```
-/plugin marketplace add eugeniughelbur/obsidian-second-brain
-/plugin install obsidian-second-brain@obsidian-second-brain
+/plugin marketplace add Mouraovicente/obsidian-second-brain-contabil
+/plugin install obsidian-second-brain@obsidian-second-brain-contabil
 ```
 
 Then tell Claude where your vault is. Add this to the `env` section of `~/.claude/settings.json`:
@@ -148,7 +148,7 @@ Each agent sees what the others finished and can leave a lesson for review.
 - Crew runs no background loop.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mouraovicente/obsidian-second-brain-contabil/main/scripts/quick-install.sh | bash
 ```
 
 Restart Claude Code, then type `/crew setup`. Pick `~/crew` or `wiki/team/` inside your Obsidian vault.
@@ -493,8 +493,8 @@ Codex users then run `/hooks` once to trust the hooks. Restart Cursor after setu
 **Native plugin install (recommended).** Inside any Claude Code session:
 
 ```
-/plugin marketplace add eugeniughelbur/obsidian-second-brain
-/plugin install obsidian-second-brain@obsidian-second-brain
+/plugin marketplace add Mouraovicente/obsidian-second-brain-contabil
+/plugin install obsidian-second-brain@obsidian-second-brain-contabil
 ```
 
 That ships all 38 commands, the skill manual, the session-context hook, the opt-in background agent (inert until you arm it - see [hooks/postcompact.hook.example.json](hooks/postcompact.hook.example.json)), and the vault MCP server. Then tell Claude where your vault lives by adding to the `env` section of `~/.claude/settings.json`:
@@ -508,13 +508,13 @@ Restart Claude Code, then run `/obsidian-second-brain:obsidian-init` inside your
 **Classic install (script).** Use this if you want the commands as bare names (`/obsidian-init`, `/obsidian-save`, ...) or you are developing the skill and want live edits. One line (clones the skill, installs the slash commands, and registers the session-context hook):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mouraovicente/obsidian-second-brain-contabil/main/scripts/quick-install.sh | bash
 ```
 
 Or step by step:
 
 ```bash
-git clone https://github.com/eugeniughelbur/obsidian-second-brain ~/.claude/skills/obsidian-second-brain
+git clone https://github.com/Mouraovicente/obsidian-second-brain-contabil ~/.claude/skills/obsidian-second-brain
 bash ~/.claude/skills/obsidian-second-brain/install.sh
 bash ~/.claude/skills/obsidian-second-brain/scripts/setup.sh "/path/to/your/vault"
 ```
@@ -534,7 +534,7 @@ Then open Claude Code and run `/obsidian-init` inside your vault.
 > **Codex and OpenCode users: prefer the [Agent Skills build](#google-antigravity-and-any-agentsskills-harness) below.** The standalone `codex-cli` and `opencode` builds are deprecated and superseded by it; both print that notice in their own `INSTALL.md`. They still work, and will until they are removed.
 
 ```bash
-git clone https://github.com/eugeniughelbur/obsidian-second-brain
+git clone https://github.com/Mouraovicente/obsidian-second-brain-contabil
 cd obsidian-second-brain
 bash scripts/build.sh --platform codex-cli   # or opencode
 cp -R dist/codex-cli/. /path/to/your/vault/   # or dist/opencode/.
@@ -551,7 +551,7 @@ Run `bash scripts/build.sh` with no arguments to build every platform at once. S
 Antigravity, Codex CLI, OpenCode, and GitHub Copilot CLI have all converged on the open [Agent Skills](https://github.com/vercel-labs/skills) standard: workspace skills at `.agents/skills/<name>/SKILL.md`. The `agent-skills` build emits one spec-compliant tree they all read - and any future harness on the same standard works with zero repo changes.
 
 ```bash
-git clone https://github.com/eugeniughelbur/obsidian-second-brain
+git clone https://github.com/Mouraovicente/obsidian-second-brain-contabil
 cd obsidian-second-brain
 bash scripts/build.sh --platform agent-skills
 
@@ -662,7 +662,7 @@ Retrieval benchmark: [scripts/eval/BENCHMARK.md](scripts/eval/BENCHMARK.md) - a 
 
 The rule on its own: [AI-FIRST.md](AI-FIRST.md) - the note spec as a 50-line block you can paste into any `CLAUDE.md` or `AGENTS.md`. Installs nothing, works without this project, keep the attribution line.
 
-GitHub Issues: https://github.com/eugeniughelbur/obsidian-second-brain/issues. PRs welcome, see Contributing below.
+GitHub Issues: https://github.com/Mouraovicente/obsidian-second-brain-contabil/issues. PRs welcome, see Contributing below.
 
 ---
 
@@ -682,7 +682,7 @@ Inspired by [Andrey Karpathy's LLM-Wiki](https://gist.github.com/karpathy/442a6b
 
 ## Contributing
 
-**Want a specific place to start?** [Good first issues](https://github.com/eugeniughelbur/obsidian-second-brain/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are scoped to name the exact files and lines, what to watch out for, and how big the change is. They range from adding trigger phrases in a language you speak (no Python at all) to a one-command lint fix to a new slash command. Comment on one to claim it.
+**Want a specific place to start?** [Good first issues](https://github.com/Mouraovicente/obsidian-second-brain-contabil/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are scoped to name the exact files and lines, what to watch out for, and how big the change is. They range from adding trigger phrases in a language you speak (no Python at all) to a one-command lint fix to a new slash command. Comment on one to claim it.
 
 PRs welcome more generally:
 - New thinking tools

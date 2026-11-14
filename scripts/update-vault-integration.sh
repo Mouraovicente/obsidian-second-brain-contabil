@@ -29,7 +29,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-UPSTREAM_SLUG="eugeniughelbur/obsidian-second-brain"
+UPSTREAM_SLUG="Mouraovicente/obsidian-second-brain-contabil"
 BACKUP_ROOT="${XDG_CACHE_HOME:-$HOME/.cache}/obsidian-second-brain/backups"
 
 VAULT=""
@@ -105,7 +105,7 @@ ORIGIN_URL="$(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null || true)"
 if [[ "$ORIGIN_URL" != *"obsidian-second-brain"* ]]; then
   die "origin remote ($ORIGIN_URL) does not look like an obsidian-second-brain clone or fork"
 fi
-[[ "$ORIGIN_URL" == *"$UPSTREAM_SLUG"* ]] || info "note: origin is a fork ($ORIGIN_URL); pulling from it, not upstream"
+[[ "$ORIGIN_URL" == *"$UPSTREAM_SLUG"* ]] || info "note: origin ($ORIGIN_URL) is not the expected update source ($UPSTREAM_SLUG); pulling from origin anyway"
 
 if [[ $DRY_RUN -eq 1 ]]; then
   info "DRY RUN - plan:"

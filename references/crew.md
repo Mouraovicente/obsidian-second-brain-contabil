@@ -8,7 +8,7 @@ It works in a plain folder without Obsidian. Python 3.10 or later is required; C
 The README installer makes `/crew setup` available in Claude Code:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eugeniughelbur/obsidian-second-brain/main/scripts/quick-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Mouraovicente/obsidian-second-brain-contabil/main/scripts/quick-install.sh | bash
 ```
 
 Restart Claude Code, then type `/crew setup`. Choose `~/crew` or `wiki/team/` inside your vault.

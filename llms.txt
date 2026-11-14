@@ -111,8 +111,8 @@ A `PostToolUse` hook (`hooks/validate-ai-first.sh`) enforces this at write time:
 ### Claude Code (default - plugin marketplace)
 
 ```
-/plugin marketplace add eugeniughelbur/obsidian-second-brain
-/plugin install obsidian-second-brain@obsidian-second-brain
+/plugin marketplace add Mouraovicente/obsidian-second-brain-contabil
+/plugin install obsidian-second-brain@obsidian-second-brain-contabil
 ```
 
 (Classic alternative: clone to ~/.claude/skills/obsidian-second-brain and run scripts/setup.sh.)
@@ -120,7 +120,7 @@ A `PostToolUse` hook (`hooks/validate-ai-first.sh`) enforces this at write time:
 ### Codex CLI / OpenCode / Google Antigravity (unified Agent Skills build)
 
 ```bash
-git clone https://github.com/eugeniughelbur/obsidian-second-brain
+git clone https://github.com/Mouraovicente/obsidian-second-brain-contabil
 cd obsidian-second-brain
 bash scripts/build.sh --platform agent-skills
 npx skills add ./dist/agent-skills -a codex -a opencode -a antigravity   # or cp -R dist/agent-skills/skills/. <vault>/.agents/skills/
