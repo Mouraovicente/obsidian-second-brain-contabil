@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 Eugeniu Ghelbur and contributors
 # SPDX-License-Identifier: MIT
-# Author: Eugeniu Ghelbur (AI Automation Engineer, AI Tooling Engineer, AI Educator), https://github.com/eugeniughelbur/obsidian-second-brain
-# Questions or consulting: e.ghelbur@gmail.com | https://www.linkedin.com/in/eugeniu-ghelbur/ | More: https://theaioperator.io | https://x.com/eugeniu_ghelbur
+# Written for the obsidian-second-brain-contabil fork (https://github.com/Mouraovicente/obsidian-second-brain-contabil), not by the original author. Report issues to the fork.
 # =============================================================================
 # obsidian-recall.sh - UserPromptSubmit hook entry point (vault recall)
 # =============================================================================

@@ -37,3 +37,12 @@ def test_command_credit_is_descriptive_not_an_instruction():
     for verb in ("follow ", "subscribe", "visit ", "you must", "please "):
         assert verb not in footer, f"credit footer reads as an instruction: {verb!r}"
     assert stamp_credit.MD_FOOTER.isascii()
+
+
+def test_fork_written_code_keeps_the_fork_credit():
+    import stamp_credit
+
+    text = "#!/usr/bin/env bash\n" + "\n".join(stamp_credit.FORK_CODE_HEADER) + "\necho hi\n"
+    assert stamp_credit.stamp_code(text) == text
+    original = "#!/usr/bin/env bash\necho hi\n"
+    assert stamp_credit.FORK_LINE not in stamp_credit.stamp_code(original)

@@ -64,6 +64,14 @@ CODE_HEADER = [
     f"# Author: Eugeniu Ghelbur ({ROLES}), {REPO_URL}",
     f"# Questions or consulting: {EMAIL} | {LINKEDIN_URL} | More: {SUBSTACK_URL} | {X_URL}",
 ]
+# Files written for the fork keep the SPDX lines but credit the fork, so the
+# original author is not named as author of code he did not write.
+FORK_LINE = (
+    "# Written for the obsidian-second-brain-contabil fork "
+    "(https://github.com/Mouraovicente/obsidian-second-brain-contabil), "
+    "not by the original author. Report issues to the fork."
+)
+FORK_CODE_HEADER = CODE_HEADER[:2] + [FORK_LINE]
 # Every line the header has ever started with, so a re-stamp removes an older
 # wording cleanly and never eats the file's own first comment.
 CODE_PREFIXES = (
@@ -72,6 +80,7 @@ CODE_PREFIXES = (
     "# Author links:",
     "# Questions or consulting:",
     "# obsidian-second-brain by Eugeniu Ghelbur",
+    "# Written for the obsidian-second-brain-contabil fork",
 )
 
 # Files that travel alone: the 49 commands, the specs commands link to, the
@@ -111,9 +120,11 @@ def stamp_code(text: str) -> str:
     if lines and lines[0].startswith("#!"):
         head, lines = [lines[0]], lines[1:]
     # Drop an existing header block, matched line by line on known prefixes.
+    fork = False
     while lines and lines[0].startswith(CODE_PREFIXES):
+        fork = fork or lines[0] == FORK_LINE
         lines = lines[1:]
-    return "\n".join(head + CODE_HEADER + lines)
+    return "\n".join(head + (FORK_CODE_HEADER if fork else CODE_HEADER) + lines)
 
 
 def main() -> int:
