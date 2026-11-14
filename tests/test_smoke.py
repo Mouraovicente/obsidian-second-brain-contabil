@@ -57,6 +57,13 @@ def test_codex_cli_build_generates_expected_files():
     assert "description:" in head
     assert "Triggers: save this" in head
     assert "Use the obsidian-second-brain skill. Execute `/obsidian-save`:" in content
+    # Example hooks: same hooks.json shape, SessionStart + UserPromptSubmit only
+    # (the Stop reminder uses an output shape not verified for Codex).
+    example = json.loads(
+        (REPO_ROOT / "dist/codex-cli/.codex/hooks.example.json").read_text(encoding="utf-8"))
+    assert set(example["hooks"]) == {"SessionStart", "UserPromptSubmit"}
+    assert "Automatic memory hooks" in (REPO_ROOT / "dist/codex-cli/INSTALL.md").read_text(
+        encoding="utf-8")
 
 
 def test_agent_skills_build_generates_spec_compliant_tree():
@@ -1083,7 +1090,8 @@ def test_mcp_validate_note_accepts_the_callout_preamble(tmp_path, monkeypatch):
 
 
 def test_recall_hook_contract(tmp_path):
-    """Bounded recall: inert without the double gate, injects a bounded brief
+    """Bounded recall: on by default when a vault is set, off with
+    OBSIDIAN_RECALL_ENABLED=0, injects a bounded brief
     on a relevant prompt, abstains (silently, exit 0) on an irrelevant one,
     and logs every decision to <vault>/.claude-runs/."""
     hook = REPO_ROOT / "hooks/obsidian-recall.py"
@@ -1097,15 +1105,15 @@ def test_recall_hook_contract(tmp_path):
     def run(prompt, enabled=True):
         env = dict(os.environ, OBSIDIAN_VAULT_PATH=str(vault))
         env.pop("OBSIDIAN_RECALL_ENABLED", None)
-        if enabled:
-            env["OBSIDIAN_RECALL_ENABLED"] = "1"
+        if not enabled:
+            env["OBSIDIAN_RECALL_ENABLED"] = "0"
         return subprocess.run(
             [sys.executable, str(hook)],
             input=json.dumps({"prompt": prompt}),
             env=env, capture_output=True, text=True,
         )
 
-    # Gate: disabled -> silent no-op.
+    # Gate: explicitly disabled -> silent no-op (the default is ON).
     off = run("what is the status of the solar panel installation?", enabled=False)
     assert off.returncode == 0 and off.stdout == ""
 

@@ -33,7 +33,39 @@ adapter_build() {
   _codex_emit_skills "$src/commands" "$dst/$CODEX_SKILLS_DIR"
   _codex_copy_references "$src/references" "$dst/.${CODEX_DIR}/references"
   _codex_copy_scripts "$src/scripts" "$dst/.${CODEX_DIR}/scripts"
+  _codex_emit_hooks_example "$dst"
   _codex_emit_install_hint "$dst"
+}
+# Example Codex hooks file. Codex reads the same hooks.json shape Claude Code
+# does (scripts/crew.py writes it that way). The hook scripts need the full
+# source checkout (the recall hook imports integrations/), so the example
+# points at it by absolute path. Only SessionStart and UserPromptSubmit are
+# listed: their additionalContext output is the documented shape. The Stop
+# save reminder is NOT listed, because Codex continues a stopped turn through a
+# different output ({"decision": "block", "reason": ...}) that was not verified.
+_codex_emit_hooks_example() {
+  local dst="$1"
+  mkdir -p "$dst/.${CODEX_DIR}"
+  cat > "$dst/.${CODEX_DIR}/hooks.example.json" <<'JSON'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {"type": "command", "command": "bash /ABSOLUTE/PATH/TO/obsidian-second-brain-contabil/hooks/load_vault_context.sh"}
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {"type": "command", "command": "bash /ABSOLUTE/PATH/TO/obsidian-second-brain-contabil/hooks/obsidian-recall.sh", "timeout": 15}
+        ]
+      }
+    ]
+  }
+}
+JSON
 }
 
 # Emit AGENTS.md at the dist root. Thin always-on manual - no routing table,
@@ -189,6 +221,22 @@ requirement, not a convenience:
 If you keep your vault outside git and want to work from subfolders, run
 `git init` in the vault root once. Reported by @Palo-Alto-AI-Research-Lab on
 codex-cli 0.144.4 (issue #171).
+
+## Automatic memory hooks (example only, untested in Codex)
+
+`.codex/hooks.example.json` shows how to run two of the plugin's hooks from
+Codex: `SessionStart` (loads the vault manual) and `UserPromptSubmit` (vault
+recall, on by default whenever `OBSIDIAN_VAULT_PATH` is set). Copy it to
+`~/.codex/hooks.json` (or merge it into the existing file), replace
+`/ABSOLUTE/PATH/TO/` with the real path of the source checkout (the scripts
+need the whole repo, not only this build), then run `/hooks` once in Codex to
+review and trust them. These hooks were NOT tested in the Codex that ships
+inside the ChatGPT desktop app.
+
+The Stop-time save reminder is not included: Codex continues a stopped turn
+with a different output shape that was not verified. On Codex, saving is
+manual: say "save this" or invoke the `obsidian-save` skill. There is no
+automatic save reminder.
 
 ## Write-time validation hook (not included)
 

@@ -15,12 +15,13 @@ bounded-recall pattern):
   FAIL-CLOSED any error exits 0 with no output - recall must never break a prompt
   OBSERVABLE every decision (inject or abstain) appends one JSONL line to
              <vault>/.claude-runs/recall-YYYY-MM-DD.jsonl (fail-soft)
-  OPT-IN    ships inert; runs only when BOTH env vars are set:
-              OBSIDIAN_VAULT_PATH=/path/to/vault
-              OBSIDIAN_RECALL_ENABLED=1
+  DEFAULT ON  runs whenever OBSIDIAN_VAULT_PATH is set. Opt out with
+              OBSIDIAN_RECALL_ENABLED=0 (also false / off / no). The plugin
+              registers it through hooks/hooks.json (hooks/obsidian-recall.sh).
 
-Register under UserPromptSubmit (see hooks/recall.hook.example.json). Reuses
-the shipped vault_ops.search - the exact ranking the MCP serves, including
+Many users have no other memory tool, so this hook is their only automatic
+recall; it stays safe to run on every prompt because it abstains when weak.
+Reuses the shipped vault_ops.search - the exact ranking the MCP serves, including
 freshness and supersession reranking.
 """
 
@@ -65,7 +66,7 @@ def _terms(vault_ops, s: str) -> set:
 
 
 def main() -> int:
-    if os.environ.get("OBSIDIAN_RECALL_ENABLED", "").strip() != "1":
+    if os.environ.get("OBSIDIAN_RECALL_ENABLED", "").strip().lower() in ("0", "false", "off", "no"):
         return 0
     vault_path = os.environ.get("OBSIDIAN_VAULT_PATH", "").strip()
     if not vault_path or not Path(vault_path).is_dir():
@@ -95,7 +96,9 @@ def main() -> int:
     # The ranker only de-weights raw/ (0.15); for a channel that fires
     # unprompted, de-weighting is not the same as excluding. Derived wiki notes
     # are the intended recall target and are unaffected.
-    results = [r for r in results if not str(r.get("path", "")).startswith("raw/")]
+    # _CLAUDE.md is the manual the session already loaded; recalling it is noise.
+    results = [r for r in results
+               if not str(r.get("path", "")).startswith("raw/") and r.get("path") != "_CLAUDE.md"]
 
     if not results:
         _log(vault, {"prompt_chars": len(prompt), "abstained": True, "reason": "no results"})

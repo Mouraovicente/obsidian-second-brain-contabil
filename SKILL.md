@@ -899,7 +899,25 @@ If `index.md` doesn't exist, offer to run `/obsidian-init` to generate it.
 
 ---
 
+## Automatic memory hooks (no other memory tool needed)
+
+Many users install nothing besides this plugin, so these hooks are their only automatic memory. The plugin registers them in `hooks/hooks.json`; all of them stay silent unless `OBSIDIAN_VAULT_PATH` is set.
+
+| Event | Script | What it does | Opt out |
+|---|---|---|---|
+| `SessionStart` | `hooks/load_vault_context.sh` | Loads the vault manual (`_CLAUDE.md`) and the skill root into the session. | Unset `OBSIDIAN_VAULT_PATH` |
+| `UserPromptSubmit` | `hooks/obsidian-recall.sh` | Recall: injects up to 4 relevant note titles and snippets (about 900 characters), or nothing when the match is weak. Lexical search only, read-only, never injects `raw/` or `_CLAUDE.md`. On by default. | `OBSIDIAN_RECALL_ENABLED=0` |
+| `PostToolUse` | `hooks/validate-ai-first.sh` | Checks every note written in the vault against the AI-first rule (see below). Needs `jq`. | `AI_FIRST_SKIP_CHECKS` |
+| `Stop` | `hooks/obsidian-save-reminder.sh` | Save reminder: counts finished turns; after 6 turns (`OBSIDIAN_SAVE_REMINDER_TURNS`) with no vault write, asks Claude once to save anything durable with the `/obsidian-save` procedure, or to end quietly if nothing is worth keeping. Never acts while `stop_hook_active` is true. Writes a small state file under the OS temp dir. | `OBSIDIAN_SAVE_REMINDER=0` |
+| `PostCompact` | `hooks/obsidian-bg-agent.sh` | Inert unless armed, see the next section. | Do not arm it |
+
+If you use ai-memory or another memory tool, these still work alongside it; turn off recall or the reminder if two tools inject the same thing. On Codex there are no automatic hooks in the build: saving is manual (`/obsidian-save`), and `dist/codex-cli/.codex/hooks.example.json` is an untested example for SessionStart and UserPromptSubmit.
+
+---
+
 ## Background Agent (PostCompact Hook)
+
+> **Needs a `claude` CLI on PATH and runs with `--dangerously-skip-permissions`** (restricted to file tools) in the vault directory. This fork recommends leaving it off on office machines: it is inert until you arm it (`OBSIDIAN_BG_AGENT_ENABLED`), and the other hooks above cover the common case.
 
 A background agent that fires automatically whenever Claude compacts the conversation context. It reads the session summary and propagates everything worth preserving to the vault - no user action required.
 

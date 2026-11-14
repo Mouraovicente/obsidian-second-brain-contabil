@@ -203,7 +203,7 @@ def test_plugin_hooks_reference_shipped_executable_scripts():
     # enforcing nothing on a plugin install (found by the claude-code owner,
     # issue #171). Keep it in this set so an adapter refactor cannot drop it
     # back out silently.
-    assert set(hooks) == {"SessionStart", "PostToolUse", "PostCompact"}
+    assert set(hooks) == {"SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "PostCompact"}
     assert any(
         "validate-ai-first.sh" in hook["command"]
         for group in hooks["PostToolUse"]
